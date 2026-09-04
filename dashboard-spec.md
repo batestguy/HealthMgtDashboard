@@ -248,7 +248,7 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 ## 8. Deployment (decision #18) — status: in progress
 
 - **Repo:** `batestguy/HealthMgtDashboard` — created 2026-09-04, `main` branch, public (https://github.com/batestguy/HealthMgtDashboard).
-- **GitHub Pages:** enabled, deploy from `main` at root. **Live URL: `https://batestguy.github.io/HealthMgtDashboard/`** (this is the Share Link the Export tab copies). Will 404 until the first `index.html` is committed.
+- **GitHub Pages:** enabled, deploy from `main` at root. **Live URL: `https://batestguy.github.io/HealthMgtDashboard/`** (this is the Share Link the Export tab copies). First `index.html` committed 2026-09-04 — the live site now serves the dashboard shell + Projects tab.
 - All libraries stay on CDN (no build artifacts to commit beyond source + `assets/sample-data.xlsx`).
 - Verify live URL works on iPhone (Safari) and Android (Chrome) before sign-off (testing devices: **both available**).
 - (Optional later) `CNAME` for custom domain.
@@ -296,4 +296,5 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 
 - 2026-09-04 — Repo initialized (commit `dbbea06`): `dashboard-spec.md`, `healtguide.txt`, `knowledge.md`, `.gitignore`, `.agents/` scaffolding.
 - 2026-09-04 — Seeded sample workbook shipped (commit `d398a25`): `assets/sample-data.xlsx` (6 projects / 20 tasks / 4 resources / 72 finance rows / 10 locations) generated deterministically by `tools/generate-sample-xlsx.js` (`npm run generate:sample` in `tools/`).
-- 2026-09-04 — GitHub Pages enabled from `main`; live URL `https://batestguy.github.io/HealthMgtDashboard/` (404 until first `index.html`).
+- 2026-09-04 — GitHub Pages enabled from `main`; live URL `https://batestguy.github.io/HealthMgtDashboard/`.
+- 2026-09-04 — **App shell + Projects tab shipped.** Files: `index.html`, `css/styles.css`, `js/data.js` (SheetJS multi-sheet parse + per-sheet validation + sample loader), `js/charts.js` (Chart.js v4 wrapper, destroy-on-recreate), `js/app.js` (tabs, upload/drag-drop/sample/template, KPIs, tracker, chart, summary). Upload validation verified in a Node harness: good workbook parses 6/20/4/72/10; broken file reports missing columns, non-numeric cells, FK violations, out-of-bbox coordinates, and keeps prior data. Health/Quiz/Ask/Export tabs are visible placeholders pending their build steps.
