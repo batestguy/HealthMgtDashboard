@@ -13,3 +13,6 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# Local render/screenshot artifacts
+output/
