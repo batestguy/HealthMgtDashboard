@@ -8,6 +8,9 @@
   <!-- Runtime libraries (CDN only — no build step, per spec §3.2) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 </head>
 <body>
   <header class="app-header">
@@ -53,9 +56,47 @@
       </div>
     </section>
 
-    <!-- ============ Tab 2: Health (placeholder) ============ -->
+    <!-- ============ Tab 2: Health ============ -->
     <section id="tab-health" class="tab-panel" aria-label="Health">
-      <div class="card"><h2>🏥 Health</h2><p class="summary-text">The Health tab (GRID3 facility map, HDX indicator trends, facility-type chart) ships in the next build step.</p></div>
+      <div class="card">
+        <h2>🏥 Health Data</h2>
+        <p id="health-source-line" class="source-line">Loading live GRID3 + HDX data…</p>
+        <p id="data-badge" class="data-badge" hidden>⚠ Sample data — live source unavailable</p>
+        <div class="btn-row">
+          <button id="btn-health-refresh" class="btn btn-secondary" type="button">🔄 Refresh data</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid" aria-label="Health KPIs">
+        <div class="card kpi-card"><span class="kpi-value" id="kpi-facilities">–</span><span class="kpi-label">Facilities</span></div>
+        <div class="card kpi-card"><span class="kpi-value" id="kpi-states">–</span><span class="kpi-label">States covered</span></div>
+        <div class="card kpi-card"><span class="kpi-value" id="kpi-public">–</span><span class="kpi-label">Public</span></div>
+        <div class="card kpi-card"><span class="kpi-value" id="kpi-private">–</span><span class="kpi-label">Private</span></div>
+      </div>
+
+      <div class="card">
+        <h2>🗺 Facility Map</h2>
+        <div id="health-map" class="health-map" aria-label="Map of Nigerian health facilities"></div>
+        <p class="map-hint">Circles = facilities per state (GRID3). Zoom in (level 8+) to load individual facility points.</p>
+      </div>
+
+      <div class="card">
+        <h2>🏥 Facilities by Level</h2>
+        <div class="chart-wrap"><canvas id="chart-facility-types" aria-label="Doughnut chart of facility levels"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h2>📈 Indicator Trends</h2>
+        <div class="chart-wrap chart-wrap-tall"><canvas id="chart-indicator-trends" aria-label="Line chart of health indicator trends"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h2>📋 Key Indicators</h2>
+        <p class="map-hint">Tap a checkbox to show or hide an indicator for this session.</p>
+        <ul id="key-indicator-list" class="indicator-list"></ul>
+      </div>
+
+      <p class="credit">Facilities: GRID3 NGA Health Facilities v2.0 (CC BY 4.0) · Indicators: HDX / WHO — Nigeria Health Indicators</p>
     </section>
 
     <!-- ============ Tab 3: Quiz (placeholder) ============ -->
@@ -84,9 +125,14 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <!-- App scripts: data → charts → app (app.js wires everything, per spec §3.1) -->
+  <!-- App scripts: data → charts → health-data → map → health → app (app wires everything, per spec §3.1) -->
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="js/data.js"></script>
   <script src="js/charts.js"></script>
+  <script src="js/health-data.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/health.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

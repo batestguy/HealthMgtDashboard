@@ -51,8 +51,19 @@ window.PMApp = (function () {
   function initTabs() {
     var buttons = document.querySelectorAll('.tab-btn');
     Array.prototype.forEach.call(buttons, function (btn) {
-      btn.addEventListener('click', function () { activateTab(btn.getAttribute('data-tab')); });
+      btn.addEventListener('click', function () {
+        var name = btn.getAttribute('data-tab');
+        activateTab(name);
+        try {
+          if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
+        } catch (e) { /* hash update is a nicety only */ }
+      });
     });
+  }
+
+  function tabFromHash() {
+    var t = (location.hash || '').replace('#', '');
+    return (t === 'projects' || t === 'health' || t === 'quiz' || t === 'ask' || t === 'export') ? t : 'projects';
   }
 
   function activateTab(name) {
@@ -66,6 +77,8 @@ window.PMApp = (function () {
       b.classList.toggle('active', active);
       b.setAttribute('aria-selected', active ? 'true' : 'false');
     });
+    // Lazily build a tab the first time it is opened.
+    if (name === 'health' && window.PMHealth) window.PMHealth.init();
   }
 
   // ---------- Excel upload ----------
@@ -278,6 +291,8 @@ window.PMApp = (function () {
   function init() {
     initTabs();
     initUpload();
+    // Deep-link support (#health, #quiz, …) — also used by tab switches.
+    activateTab(tabFromHash());
     // Auto-load the seeded sample so the dashboard is demo-ready on first open.
     PMData.loadSample()
       .then(function (out) {
@@ -295,4 +310,6 @@ window.PMApp = (function () {
   } else {
     init();
   }
+
+  return { toast: toast };
 })();

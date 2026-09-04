@@ -62,5 +62,83 @@ window.PMCharts = (function () {
     return registry[id];
   }
 
-  return { bar: bar, destroy: destroy, destroyAll: destroyAll };
+  var PALETTE = ['#008751', '#f5b041', '#38a169', '#e53e3e', '#3182ce', '#805ad5', '#dd6b20', '#4a5568'];
+  function colorFor(i) { return PALETTE[i % PALETTE.length]; }
+
+  function doughnut(id, labels, values) {
+    if (typeof Chart === 'undefined') {
+      throw new Error('Chart.js failed to load from CDN.');
+    }
+    destroy(id);
+    var canvas = document.getElementById(id);
+    if (!canvas) return;
+    registry[id] = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: labels.map(function (_, i) { return colorFor(i); }),
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 12, font: { size: 11 } }
+          }
+        },
+        cutout: '55%'
+      }
+    });
+    return registry[id];
+  }
+
+  function line(id, labels, series) {
+    if (typeof Chart === 'undefined') {
+      throw new Error('Chart.js failed to load from CDN.');
+    }
+    destroy(id);
+    var canvas = document.getElementById(id);
+    if (!canvas) return;
+    registry[id] = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: series.map(function (s, i) {
+          return {
+            label: s.label,
+            data: s.data,
+            borderColor: colorFor(i),
+            backgroundColor: colorFor(i),
+            tension: 0.3,
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false
+          };
+        })
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 12, font: { size: 11 } }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true },
+          x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } }
+        }
+      }
+    });
+    return registry[id];
+  }
+
+  return { bar: bar, doughnut: doughnut, line: line, destroy: destroy, destroyAll: destroyAll };
 })();
