@@ -2,9 +2,10 @@
 
 ## What this project is
 
-A **Nigeria Health + Project Management Dashboard** (spec v1.0). Still at the **planning stage — no code exists yet**. The deliverable is a single, self-contained `index.html` (HTML5 + CSS3 + vanilla JS, no build tools) hosted on GitHub Pages for internal team use on phone and desktop.
+A **Nigeria Health + Project Management Dashboard** (spec v1.1) — a multi-file static dashboard (HTML5 + CSS3 + vanilla JS, no build tools) hosted on GitHub Pages for internal team use on phone and desktop. **Docs and data tooling are shipped; app code not yet written.**
 
-- **Source of truth:** `healtguide.txt` (full spec: features, data model, tech stack, acceptance criteria).
+- **Source of truth for WHAT:** `dashboard-spec.md` (decisions, per-tab requirements, acceptance criteria). `healtguide.txt` is the superseded v1.0 spec.
+- **Source of truth for HOW:** `WORKFLOW.md` (change loop, data regeneration, release, sign-off).
 - **Feature set (5 tabs, fixed bottom tab bar):**
   1. 📋 **Projects** – Excel upload (multi-sheet via SheetJS), project/task KPIs, task tracker, bar chart, risk summary.
   2. 🏥 **Health** – GRID3 facility map (~51k facilities, Leaflet + marker clusters), HDX indicator trends (1h cache), facility-type doughnut, refresh button.
@@ -14,15 +15,19 @@ A **Nigeria Health + Project Management Dashboard** (spec v1.0). Still at the **
 
 ## Key locations
 
-- `healtguide.txt` – the spec document (data architecture, quiz logic, theming, deployment checklist, acceptance criteria).
+- `dashboard-spec.md` – the spec (decisions, data architecture, theming, deployment, acceptance criteria, §12 already-done log).
+- `WORKFLOW.md` – the process: spec-first change loop, workbook regeneration, release to Pages, v1 sign-off runbook.
+- `assets/sample-data.xlsx` – seeded demo workbook (generated, never hand-edited).
+- `tools/generate-sample-xlsx.js` – dev-only generator for the workbook.
 - `.agents/types/` – internal Codebuff agent tooling; **not part of the project**, ignore for feature work.
-- Future: `index.html` goes in repo root (does not exist yet).
+- Future: `index.html` + `css/styles.css` + `js/*.js` per spec §3.1 (not yet written; Pages 404s until `index.html` lands).
 
 ## Commands
 
-- **No package.json, no build tooling, no tests.** This is a static single-file app.
-- "Build" = author/edit `index.html`; "run" = open it in a browser or serve statically.
-- All libraries come from **CDNs** (never npm): Chart.js v4, Leaflet.js + Leaflet.markercluster + OpenStreetMap tiles, SheetJS (XLSX), html2canvas, jsPDF.
+- **No build step for the app.** The runtime is static files served as-is; all libraries come from **CDNs** (never npm): Chart.js v4, Leaflet.js + Leaflet.markercluster + OpenStreetMap tiles, SheetJS (XLSX), html2canvas, jsPDF.
+- Preview: `python -m http.server 8000` (or `npx serve .`).
+- Regenerate the sample workbook (dev-only tooling): `cd tools && npm install && npm run generate:sample`.
+- Git: work on `main`; push = Pages deploy to https://batestguy.github.io/HealthMgtDashboard/.
 
 ## Conventions & gotchas
 
