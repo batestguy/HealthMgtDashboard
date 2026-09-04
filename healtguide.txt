@@ -1,0 +1,246 @@
+# 🇳🇬 Nigeria Health + Project Management Dashboard
+## Specification Document v1.0
+
+---
+
+### 1. Executive Summary
+
+A **mobile-first, single‑page HTML dashboard** that combines:
+- **Project management** with complex Excel data import (multiple sheets, cross-references, formulas).
+- **Live Nigerian health data** from GRID3 (facility locations) and HDX (aggregated indicators like malaria, immunization).
+- **Natural Language Query** (simulated keyword-matching) for conversational data exploration.
+- **Interactive quiz** with mixed static + dynamic questions.
+- **Multiple chart types** (bar, pie, map, line, scatter).
+- **Export/share** functionality.
+
+The dashboard is designed for **internal team use** (project managers, analysts, executives) and delivered as a **self-contained HTML file** hosted on **GitHub Pages** – accessible via a public link from any phone or desktop.
+
+---
+
+### 2. Target Users
+| Role | Primary Needs |
+|------|---------------|
+| Project Managers | Task tracker, KPIs, resource allocation |
+| Healthcare Administrators | Facility maps, public/private split, trends |
+| Data Analysts | Excel upload, dynamic charts, NLQ exploration |
+| Executives | High‑level KPIs, export reports, quiz for knowledge check |
+| General Public | Simple overview, map visualisation, educational quiz |
+
+---
+
+### 3. Data Architecture
+
+#### 3.1 Excel Data (Simulated – Complex)
+The dashboard will simulate a **moderately complex** project management dataset with the following sheets:
+
+| Sheet Name | Columns | Purpose |
+|------------|---------|---------|
+| **Projects** | `ProjectID`, `Name`, `Budget`, `StartDate`, `EndDate`, `Status`, `Owner`, `Region` | Master project list |
+| **Tasks** | `TaskID`, `ProjectID` (FK), `Title`, `Assignee`, `Status`, `Priority`, `DueDate`, `Completion%` | Task breakdown per project |
+| **Resources** | `ResourceID`, `ProjectID` (FK), `Type` (Person/Equipment), `Name`, `Cost`, `Allocation%` | Resource tracking |
+| **Finances** | `ProjectID` (FK), `Month`, `PlannedSpend`, `ActualSpend`, `Variance` | Financial performance |
+| **Locations** | `ProjectID` (FK), `State`, `LGA`, `Latitude`, `Longitude` | Geographic mapping |
+
+*All data will be generated synthetically but with realistic distributions (e.g., budgets in ₦/$ millions, states across Nigeria).*
+
+**Upload Mechanism:** SheetJS (XLSX library) reads the file, parses all sheets, and stores data in a client-side JavaScript store.
+
+#### 3.2 Health APIs
+
+| API | Endpoint | Data | Auth | Frequency |
+|-----|----------|------|------|-----------|
+| **GRID3 Nigeria Health Facilities** | `ArcGIS FeatureServer` | ~51k facilities (name, type, ownership, lat/lng, state) | None | Real-time fetch on tab switch |
+| **HDX (Humanitarian Data Exchange)** | `https://data.humdata.org/api/` | Aggregated indicators: malaria prevalence, immunization coverage, maternal mortality, etc. | None (open data) | Cached for 1 hour |
+
+**Fallback:** If an API fails, the dashboard uses pre‑seeded sample data (so the demo never breaks).
+
+---
+
+### 4. Dashboard Sections & Features
+
+All sections are accessible via a **fixed bottom tab bar** (optimised for thumbs).
+
+#### Tab 1: 📋 Projects
+| Feature | Description |
+|---------|-------------|
+| **Excel Upload** | Drag‑and‑tap area; supports `.xlsx`/`.xls`. Displays filename and row count on success. |
+| **Project KPIs** | 4 cards: Total Projects, Total Tasks, Completion Rate (%), Total Budget. |
+| **Task Tracker** | List of all tasks with status dots (todo/in‑progress/done), progress %, due date, assignee count. |
+| **Project Chart** | Bar chart showing progress % per project (coloured green/yellow/red based on status). |
+| **Project Summary** | Dynamic text line e.g., "All projects on track" or "2 projects at risk". |
+
+#### Tab 2: 🏥 Health
+| Feature | Description |
+|---------|-------------|
+| **Health KPIs** | 4 cards: Total Facilities, States Covered, Public Facilities, Private Facilities. |
+| **Facility Map** | Leaflet.js map with pin clusters showing facility locations (from GRID3). |
+| **Facility Type Chart** | Doughnut chart showing breakdown by type (PHC, General Hospital, Teaching, Clinic, etc.). |
+| **Indicator Trends** | Line chart showing HDX data (e.g., immunisation coverage 2015–2025). |
+| **Key Indicators** | List view: beds per 10k, doctors per 10k, PHC count, etc. |
+| **Refresh Button** | Manually re‑fetch live data. |
+
+#### Tab 3: 🧠 Quiz
+| Feature | Description |
+|---------|-------------|
+| **Batch Progress** | Shows "Question X of Y • Batch Z". |
+| **Question Display** | Static trivia (Nigeria health facts) + dynamic questions generated from imported Excel data. |
+| **Multiple Choice** | 4 options; clicking disables all buttons and highlights correct/wrong. |
+| **Feedback** | Instant correct/wrong message with correct answer shown. |
+| **Score Tracker** | Running score displayed as "5/10". |
+| **Next / Reset** | Navigate questions or restart the quiz. |
+
+*Dynamic question examples:*  
+- "Which project has the highest budget?"  
+- "How many tasks are assigned to [Assignee]?"  
+- "What is the total planned spend for [Project]?"
+
+#### Tab 4: 💬 Ask (NLQ)
+| Feature | Description |
+|---------|-------------|
+| **Query Input** | Text box with placeholder "Ask me anything about your data…". |
+| **Keyword Matching** | Simulated AI that parses keywords like "show", "filter", "top", "budget", "Lagos", "facilities", "tasks". |
+| **Response Area** | Displays a summary, updates KPIs, or filters charts based on the query. |
+| **Example Chips** | Quick‑tap suggestions: "Show projects in Lagos", "Top 3 tasks", "Facilities by state". |
+
+#### Tab 5: 📤 Export
+| Feature | Description |
+|---------|-------------|
+| **Export as PNG** | Capture the current view (using html2canvas) and download. |
+| **Export as PDF** | Generate a PDF report (using jsPDF) including KPIs and a selected chart. |
+| **Share Link** | Copy the public GitHub Pages URL to share the dashboard. |
+
+---
+
+### 5. Chart & Visualisation Strategy
+| Chart Type | Use Case | Library |
+|------------|----------|---------|
+| **Bar** | Project progress, facility counts per state | Chart.js |
+| **Doughnut/Pie** | Public vs private facilities, facility type breakdown | Chart.js |
+| **Map** | Facility locations with clusters | Leaflet.js + Leaflet.markercluster |
+| **Line** | Time‑series trends (immunisation, malaria cases) | Chart.js |
+| **Scatter/Bubble** | Correlation between facilities and population (if population data is available) | Chart.js |
+
+---
+
+### 6. Technical Stack
+
+| Layer | Technology | Rationale |
+|-------|------------|-----------|
+| **Frontend** | Pure HTML5 + CSS3 + Vanilla JS | Single file, no build tools, works everywhere. |
+| **Charts** | Chart.js v4 | Lightweight, responsive, mobile‑friendly. |
+| **Maps** | Leaflet.js + OpenStreetMap tiles | Free, no API key, works offline with fallback. |
+| **Excel Parsing** | SheetJS (CDN) | Industry standard for client‑side XLSX reading. |
+| **Export** | html2canvas + jsPDF | Capture and generate reports. |
+| **Icons** | Emoji + Unicode | No external icon library needed (keeps file small). |
+| **Hosting** | GitHub Pages | Free, public link, supports HTTPS. |
+
+---
+
+### 7. Natural Language Query (Simulated)
+
+**Algorithm:** Keyword → Action mapping.
+
+| Keyword(s) | Action |
+|------------|--------|
+| `show`, `list`, `display` | Filter data and refresh charts. |
+| `top`, `highest`, `max` | Sort and display top results. |
+| `Lagos`, `Kano`, `Abuja` (any state) | Filter projects/facilities by that state. |
+| `budget`, `cost`, `spend` | Highlight financial KPIs. |
+| `tasks`, `assignee`, `due` | Focus on task tracker. |
+| `facilities`, `health`, `hospital` | Switch to Health tab and filter. |
+
+**Response:** The query box updates a summary paragraph and optionally navigates to the relevant tab.
+
+---
+
+### 8. MCP Integration Strategy (Power BI & Tableau)
+
+Since this is a **static HTML** dashboard hosted on GitHub Pages, live MCP server connections are not possible client‑side. However, we can leverage them for **data preparation**:
+
+1. **Power BI MCP** – Use locally to export your PBIX semantic model as CSV/JSON files. These can be uploaded via the Excel import (or pre‑loaded as sample data).
+2. **Tableau MCP** – Use locally to extract data from Tableau workbooks and save as `.hyper` or CSV, then convert to XLSX for import.
+
+**Future Upgrade Path:** If you later deploy a Node.js backend (e.g., on Vercel with serverless functions), you can host the MCP servers there and call them from the dashboard via REST APIs – enabling live Power BI/Tableau data refresh.
+
+---
+
+### 9. Quiz Generation Logic
+
+**Static Questions** (hard‑coded):
+(7 questions provided.)
+
+**Dynamic Questions** (generated from uploaded Excel):
+- Iterate over the `Projects` sheet.
+- For each project, generate: "What is the budget for [Project Name]?" with 4 options (3 distractors from other projects).
+- Iterate over `Tasks` sheet: "How many tasks are assigned to [Assignee]?" (multiple‑choice numeric ranges).
+
+**Question Pool:** 10–12 total questions per quiz session (mix 5 static + 5–7 dynamic). Batches of 3 questions per screen (as per your original request), but delivered one at a time for mobile clarity.
+
+---
+
+### 10. UI/UX & Theming (Nigeria‑Inspired)
+
+| Element | Color / Style |
+|---------|---------------|
+| **Primary** | `#008751` (Nigerian green) |
+| **Secondary** | `#f5b041` (gold) |
+| **Background** | `#f0f4f8` (light gray) |
+| **Text** | `#1a202c` (dark) |
+| **Cards** | White with subtle shadow, 16px border‑radius |
+| **Header** | Gradient from green to darker green, white text |
+| **Status dots** | Green (done), Yellow (in‑progress), Gray (todo) |
+| **Font** | System font stack (-apple-system, etc.) |
+| **Touch targets** | Minimum 44px height for all buttons |
+
+**Mobile‑First:** Single column layout, max‑width 480px, centred. Bottom tab bar with 5 icons.
+
+---
+
+### 11. Deployment Checklist
+
+- [ ] Create GitHub repository.
+- [ ] Place `index.html` in the root.
+- [ ] Enable GitHub Pages (Settings → Pages → Deploy from `main` branch).
+- [ ] Ensure all external libraries are loaded via CDN (Chart.js, Leaflet, SheetJS, html2canvas, jsPDF).
+- [ ] Test on:
+  - [ ] iPhone (Safari)
+  - [ ] Android (Chrome)
+  - [ ] Desktop (Chrome/Edge/Firefox)
+- [ ] (Optional) Add a `CNAME` file for a custom domain.
+
+**Public URL:** `https://[your-username].github.io/[repo-name]/`
+
+---
+
+### 12. Future Enhancements (Phased)
+
+| Phase | Feature |
+|-------|---------|
+| **Phase 2** | Replace simulated NLQ with real OpenAI/Gemini API (add API key input). |
+| **Phase 3** | Add a lightweight Node.js backend to proxy MCP calls (Power BI/Tableau live). |
+| **Phase 4** | User authentication (simple login) to save quiz scores and preferences. |
+| **Phase 5** | Push notifications for project deadlines or health alerts. |
+
+---
+
+### 13. Acceptance Criteria
+
+- [ ] Excel upload works with complex multi‑sheet files.
+- [ ] All KPIs update correctly after upload.
+- [ ] Health API data loads within 3 seconds (or fallback appears).
+- [ ] Map displays facility pins with clustering.
+- [ ] Quiz shows a mix of static and dynamic questions.
+- [ ] NLQ understands at least 10 keyword combinations.
+- [ ] Dashboard is fully usable on a 375×812 phone screen.
+- [ ] All charts render without console errors.
+- [ ] Export generates a downloadable PNG/PDF.
+
+---
+
+## ✅ Next Steps
+
+1. **Review this spec** – let me know if any section needs tweaking.
+2. **I'll generate the final HTML file** – a single, polished `index.html` that implements everything above.
+3. **You upload it** to a GitHub repo, enable Pages, and share the link.
+
+Would you like me to proceed with building the HTML file now, or do you have any changes to the spec first?

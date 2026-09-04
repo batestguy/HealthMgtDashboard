@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Logs & env
+*.log
+.env
+.env.*
+
+# Editor
+.vscode/
+.idea/
