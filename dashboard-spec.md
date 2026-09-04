@@ -245,12 +245,12 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 
 ---
 
-## 8. Deployment (decision #18)
+## 8. Deployment (decision #18) — status: in progress
 
-- **Create the GitHub repo now** from this workspace; populate with files; track progress via commits.
-- Enable GitHub Pages: Settings → Pages → Deploy from `main` branch.
-- All libraries stay on CDN (no build artifacts to commit beyond source + `sample-data.xlsx`).
-- Verify live URL `https://{username}.github.io/{repo}/` works on iPhone (Safari) and Android (Chrome) before sign-off (decision on testing devices: **both available**).
+- **Repo:** `batestguy/HealthMgtDashboard` — created 2026-09-04, `main` branch, public (https://github.com/batestguy/HealthMgtDashboard).
+- **GitHub Pages:** enabled, deploy from `main` at root. **Live URL: `https://batestguy.github.io/HealthMgtDashboard/`** (this is the Share Link the Export tab copies). Will 404 until the first `index.html` is committed.
+- All libraries stay on CDN (no build artifacts to commit beyond source + `assets/sample-data.xlsx`).
+- Verify live URL works on iPhone (Safari) and Android (Chrome) before sign-off (testing devices: **both available**).
 - (Optional later) `CNAME` for custom domain.
 
 ---
@@ -289,5 +289,11 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 
 1. **Exact GRID3 FeatureServer layer URL** — verify against the ArcGIS item `a0ed9627a8b240ff8b315a84575754a4` (or current GRID3 rehost) before wiring `map.js`.
 2. **Exact HDX HAPI query params** for the "Nigeria – Health Indicators" dataset (`who-data-for-nga`) — confirm resource IDs and date coverage at build time.
-3. **Repo name** for GitHub Pages URL (affects Share Link feature).
+3. ~~Repo name~~ — **resolved:** `batestguy/HealthMgtDashboard`; live URL `https://batestguy.github.io/HealthMgtDashboard/`.
 4. **Fuzzy tolerance level** — start at Levenshtein ≤ 2 for keywords, ≤ 1 for state names; tune against the ≥10-combo acceptance set.
+
+## 12. Already-Done Log
+
+- 2026-09-04 — Repo initialized (commit `dbbea06`): `dashboard-spec.md`, `healtguide.txt`, `knowledge.md`, `.gitignore`, `.agents/` scaffolding.
+- 2026-09-04 — Seeded sample workbook shipped (commit `d398a25`): `assets/sample-data.xlsx` (6 projects / 20 tasks / 4 resources / 72 finance rows / 10 locations) generated deterministically by `tools/generate-sample-xlsx.js` (`npm run generate:sample` in `tools/`).
+- 2026-09-04 — GitHub Pages enabled from `main`; live URL `https://batestguy.github.io/HealthMgtDashboard/` (404 until first `index.html`).
