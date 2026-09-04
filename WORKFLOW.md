@@ -43,9 +43,7 @@ Read this before starting any work; follow it for every feature, fix, and releas
    | All styles | `css/styles.css` |
    | Seeded workbook source | `tools/generate-sample-xlsx.js` |
 
-   Script order in `index.html`: leaflet → markercluster → data → charts → health-data → map → health → app (app wires everything last).
-
-   Keep the script load order in `index.html`: `data.js → charts.js → map.js → quiz.js → nlq.js → export.js → app.js` (app.js wires everything last).
+   Script order in `index.html`: leaflet → markercluster → data → charts → health-data → map → health → quiz → app (app wires everything last). Add `nlq.js` before `app.js` when Ask ships, then `export.js` — keep `app.js` last.
 4. **Preview locally** — serve the folder over HTTP (no bundler, no dev server config):
 
    ```bash

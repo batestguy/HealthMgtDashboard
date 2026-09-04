@@ -179,9 +179,15 @@
       <p class="credit">Facilities: GRID3 NGA Health Facilities v2.0 (CC BY 4.0) · Indicators: HDX / WHO — Nigeria Health Indicators</p>
     </section>
 
-    <!-- ============ Tab 3: Quiz (placeholder) ============ -->
+    <!-- ============ Tab 3: Quiz ============ -->
     <section id="tab-quiz" class="tab-panel" aria-label="Quiz">
-      <div class="card"><h2>🧠 Quiz</h2><p class="summary-text">Static Nigeria trivia + dynamic questions generated from your Excel data — coming in the next build step.</p></div>
+      <div class="card quiz-card">
+        <div class="card-head">
+          <h2>🧠 Quiz</h2>
+          <span class="card-tag" id="quiz-score">0/0</span>
+        </div>
+        <div id="quiz-body"></div>
+      </div>
     </section>
 
     <!-- ============ Tab 4: Ask (placeholder) ============ -->
@@ -213,6 +219,7 @@
   <script src="js/health-data.js"></script>
   <script src="js/map.js"></script>
   <script src="js/health.js"></script>
+  <script src="js/quiz.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

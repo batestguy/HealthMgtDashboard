@@ -79,6 +79,7 @@ window.PMApp = (function () {
     });
     // Lazily build a tab the first time it is opened.
     if (name === 'health' && window.PMHealth) window.PMHealth.init();
+    if (name === 'quiz' && window.PMQuiz) window.PMQuiz.init();
   }
 
   // ---------- Excel upload ----------
