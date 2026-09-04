@@ -140,5 +140,92 @@ window.PMCharts = (function () {
     return registry[id];
   }
 
-  return { bar: bar, doughnut: doughnut, line: line, destroy: destroy, destroyAll: destroyAll };
+  // Two series side by side per category, e.g. planned vs actual spend.
+  function groupedBar(id, labels, series) {
+    if (typeof Chart === 'undefined') {
+      throw new Error('Chart.js failed to load from CDN.');
+    }
+    destroy(id);
+    var canvas = document.getElementById(id);
+    if (!canvas) return;
+    registry[id] = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: series.map(function (s, i) {
+          return {
+            label: s.label,
+            data: s.data,
+            backgroundColor: s.color || colorFor(i),
+            borderRadius: 5,
+            maxBarThickness: 22
+          };
+        })
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 12, font: { size: 11 } }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: function (v) { return '\u20A6' + compact(v); }, font: { size: 10 } }
+          },
+          x: { ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+    return registry[id];
+  }
+
+  function compact(n) {
+    if (n >= 1e6) return trimZero((n / 1e6).toFixed(1)) + 'M';
+    if (n >= 1e3) return trimZero((n / 1e3).toFixed(1)) + 'k';
+    return String(Math.round(n));
+  }
+  function trimZero(s) { return s.replace(/\.0$/, ''); }
+
+  // Horizontal bars, e.g. priority counts or resource costs.
+  function hbar(id, labels, values, colors, valueFormatter) {
+    if (typeof Chart === 'undefined') {
+      throw new Error('Chart.js failed to load from CDN.');
+    }
+    destroy(id);
+    var canvas = document.getElementById(id);
+    if (!canvas) return;
+    var fmt = valueFormatter || function (v) { return v; };
+    registry[id] = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          maxBarThickness: 18
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function (ctx) { return ' ' + fmt(ctx.parsed.x); } } }
+        },
+        scales: {
+          x: { beginAtZero: true, ticks: { font: { size: 10 } } },
+          y: { ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+    return registry[id];
+  }
+
+  return { bar: bar, groupedBar: groupedBar, hbar: hbar, doughnut: doughnut, line: line, destroy: destroy, destroyAll: destroyAll };
 })();

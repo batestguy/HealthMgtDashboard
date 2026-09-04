@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Nigeria Health + PM Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <!-- Runtime libraries (CDN only — no build step, per spec §3.2) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
@@ -20,7 +23,7 @@
   <main class="app-main">
     <!-- ============ Tab 1: Projects ============ -->
     <section id="tab-projects" class="tab-panel active" aria-label="Projects">
-      <div class="card">
+      <div class="card card-toolbar reveal-1">
         <h2>📋 Excel Data</h2>
         <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Upload Excel file">
           <p class="drop-hint">📥 Tap or drag a <strong>.xlsx / .xls</strong> file here</p>
@@ -33,25 +36,102 @@
         <p id="upload-report" class="upload-report" hidden></p>
       </div>
 
-      <div class="kpi-grid" id="kpi-grid" aria-label="Project KPIs">
-        <div class="card kpi-card"><span class="kpi-value" id="kpi-projects">–</span><span class="kpi-label">Projects</span></div>
-        <div class="card kpi-card"><span class="kpi-value" id="kpi-tasks">–</span><span class="kpi-label">Tasks</span></div>
-        <div class="card kpi-card"><span class="kpi-value" id="kpi-completion">–</span><span class="kpi-label">Completion rate</span></div>
-        <div class="card kpi-card"><span class="kpi-value" id="kpi-budget">–</span><span class="kpi-label">Total budget</span></div>
+      <div class="kpi-grid reveal-1" aria-label="Project KPIs">
+        <div class="card kpi-card accent-green">
+          <span class="kpi-chip">📋</span>
+          <span class="kpi-value" id="kpi-projects">–</span>
+          <span class="kpi-label">Projects</span>
+          <span class="kpi-context" id="kpi-projects-ctx"></span>
+        </div>
+        <div class="card kpi-card accent-gold">
+          <span class="kpi-chip">✅</span>
+          <span class="kpi-value" id="kpi-tasks">–</span>
+          <span class="kpi-label">Tasks</span>
+          <span class="kpi-context" id="kpi-tasks-ctx"></span>
+        </div>
+        <div class="card kpi-card accent-teal">
+          <span class="kpi-chip">📈</span>
+          <span class="kpi-value" id="kpi-completion">–</span>
+          <span class="kpi-label">Completion rate</span>
+          <span class="kpi-context" id="kpi-completion-ctx"></span>
+        </div>
+        <div class="card kpi-card accent-red">
+          <span class="kpi-chip">💰</span>
+          <span class="kpi-value" id="kpi-budget">–</span>
+          <span class="kpi-label">Total budget</span>
+          <span class="kpi-context" id="kpi-budget-ctx"></span>
+        </div>
       </div>
 
-      <div class="card">
-        <h2>📊 Project Progress</h2>
-        <div class="chart-wrap"><canvas id="chart-progress" aria-label="Bar chart of project progress"></canvas></div>
-      </div>
-
-      <div class="card">
-        <h2>📝 Project Summary</h2>
+      <div class="card reveal-2">
+        <div class="card-head">
+          <h2>🧭 Portfolio Health</h2>
+          <span class="card-tag" id="portfolio-count">0 projects</span>
+        </div>
+        <div id="health-bar" class="health-bar" role="img" aria-label="Project status distribution"></div>
+        <div class="health-legend" id="health-legend"></div>
         <p id="project-summary" class="summary-text">No data loaded yet. Upload an Excel file or load the sample data above.</p>
       </div>
 
-      <div class="card">
-        <h2>✅ Task Tracker</h2>
+      <div class="card reveal-2">
+        <div class="card-head">
+          <h2>🎚 Filters</h2>
+        </div>
+        <div id="status-chips" class="chips" role="group" aria-label="Filter by project status"></div>
+        <label class="select-row" for="region-select">Region
+          <select id="region-select" class="select">
+            <option value="all">All regions</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="card reveal-2">
+        <div class="card-head">
+          <h2>📁 Projects</h2>
+          <span class="card-tag" id="projects-shown"></span>
+        </div>
+        <div id="project-list" class="project-list" aria-label="Project cards"></div>
+      </div>
+
+      <div class="card reveal-3">
+        <div class="card-head">
+          <h2>📊 Project Progress</h2>
+        </div>
+        <div class="chart-wrap"><canvas id="chart-progress" aria-label="Bar chart of project progress"></canvas></div>
+      </div>
+
+      <div id="card-finance" class="card reveal-3">
+        <div class="card-head">
+          <h2>💸 Spend vs Plan</h2>
+          <span class="card-tag">monthly</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chart-finance" aria-label="Grouped bar chart of planned vs actual spend"></canvas></div>
+      </div>
+
+      <div class="chart-duo reveal-3">
+        <div class="card">
+          <h2>Tasks by Status</h2>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="chart-task-status" aria-label="Doughnut chart of task statuses"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>Tasks by Priority</h2>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="chart-priority" aria-label="Horizontal bar chart of task priorities"></canvas></div>
+        </div>
+      </div>
+
+      <div id="card-resources" class="card reveal-3">
+        <div class="card-head">
+          <h2>🧰 Resource Allocation</h2>
+          <span class="card-tag" id="resource-total"></span>
+        </div>
+        <div class="chart-wrap"><canvas id="chart-resources" aria-label="Horizontal bar chart of resource costs"></canvas></div>
+      </div>
+
+      <div class="card reveal-3">
+        <div class="card-head">
+          <h2>✅ Task Tracker</h2>
+          <span class="card-tag" id="tracker-count"></span>
+        </div>
         <ul id="task-tracker" class="task-list" aria-label="Task list"></ul>
       </div>
     </section>

@@ -148,7 +148,7 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 | Text | `#1a202c` |
 | Cards | White, subtle shadow, 16px border-radius |
 | Status dots | Green (done/on track), Yellow (in-progress/at risk), Gray (todo/on hold) |
-| Font | System stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`) |
+| Font | Display: **Fraunces** (Google Fonts) for KPI numerals + card headings; body: system stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`) |
 | Touch targets | ≥44px height for all buttons |
 
 ### 5.3 Language & branding
@@ -164,15 +164,20 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 
 ## 6. Tab-by-Tab Requirements
 
-### Tab 1: 📋 Projects
+### Tab 1: 📋 Projects — portfolio command center (redesigned v1.2)
 
 | Feature | Precise behavior |
 |---------|------------------|
 | Excel upload | Drag-and-tap area, `.xlsx`/`.xls` only. On success: filename + per-sheet row counts. On failure: per-sheet error list (see §4.1). Also: **"Load sample data"** button and **"Download sample template"** link (decision #5). |
-| Project KPIs | 4 cards: Total Projects · Total Tasks · Completion Rate (%) · Total Budget (₦). All recompute after upload. |
-| Task tracker | All tasks; status dot, title, assignee, progress %, due date. Sorted by status then due date. |
-| Project chart | Bar chart, progress % per project, bars colored green/yellow/red by status. |
-| Project summary | Dynamic text: e.g., "All projects on track" / "2 projects at risk". |
+| Project KPIs | 4 cards with icon chip, accent bar, display-font value, and a **context line** (regions covered · open tasks · x of y done · spend to date). Recomputed after upload **and on filter change**. |
+| Portfolio health | Segmented status bar (On Track / At Risk / On Hold / Completed widths by count) + legend chips + dynamic summary sentence. |
+| Filters | Status chips (All + each present status) and a region dropdown (union of project `Region` + `Locations` states). Filtering drives KPIs, health bar, cards, charts, and tracker. |
+| Project cards | One card per project: **SVG progress ring** (avg task completion, status-colored, animated), status pill, owner • region • task count, budget, and tap-to-expand detail (spent vs planned vs budget, spend % of plan, task breakdown). |
+| Project chart | Bar chart, avg completion % per project, bars colored by status. |
+| Spend vs plan | Grouped monthly bar chart of planned vs actual spend across the filtered portfolio (hidden when no finance rows). |
+| Task charts | Doughnut of task statuses + horizontal bars of task priorities (side-by-side on ≥360px). |
+| Resource chart | Horizontal cost bars per resource (Person teal / Equipment green) + total; hidden when no resource rows. |
+| Task tracker | Status dot, title, **priority chip**, project tag, assignee • due date (overdue flagged red), thin progress bar, %. Sorted by status then due date. |
 
 ### Tab 2: 🏥 Health
 
@@ -299,4 +304,5 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 - 2026-09-04 — GitHub Pages enabled from `main`; live URL `https://batestguy.github.io/HealthMgtDashboard/`.
 - 2026-09-04 — **App shell + Projects tab shipped.** Files: `index.html`, `css/styles.css`, `js/data.js` (SheetJS multi-sheet parse + per-sheet validation + sample loader), `js/charts.js` (Chart.js v4 wrapper, destroy-on-recreate), `js/app.js` (tabs, upload/drag-drop/sample/template, KPIs, tracker, chart, summary).  Upload validation verified in a Node harness: good workbook parses 6/20/4/72/10; broken file reports missing columns, non-numeric cells, FK violations, out-of-bbox coordinates, and keeps prior data. Health/Quiz/Ask/Export tabs are visible placeholders pending their build steps.
 - 2026-09-04 — **Live render verified in real Chrome (headless).** Captured at 375×812 and desktop from `https://batestguy.github.io/HealthMgtDashboard/`: KPIs show 6 projects / 20 tasks / 25% / ₦335M, upload report reads "sample-data.xlsx — parsed", Chart.js drew the progress canvas, the summary line reads "2 on track, 2 at risk, 1 completed, 1 on hold.", and all 20 tracker rows render sorted (in-progress → todo → done by due date). Screenshots + DOM dump kept locally in `output/playwright/` (gitignored). Acceptance #1, #6, #7 browser-verified; full §9 sign-off still needs the on-device matrix (iPhone/Android/desktop).
+- 2026-09-04 — **Projects tab redesigned** ("portfolio command center"): Fraunces display type, KPI cards with context lines, portfolio-health segmented bar, status + region filters, expandable project cards with animated SVG progress rings, and five charts (progress bar, monthly spend vs plan, task-status doughnut, priority bars, resource allocation). Grounded in Linear's dashboard best-practices (context not bare numbers, glanceable density, surface at-risk work) and common PM-portfolio patterns (rings, status segmentation, drill-down). Verified headlessly at 375px: all 6 cards, rings, filters, charts render with zero errors; screenshot in `output/playwright/projects-v2.png`.
 - 2026-09-04 — **Health tab shipped.** Files: `js/health-data.js` (GRID3 FeatureServer provider + HDX HAPI attempt + deterministic seeds + state centroids), `js/map.js` (Leaflet aggregates + zoom-8 bbox point loading with marker clusters), `js/health.js` (KPIs, doughnut, trend lines, configurable key indicators, refresh, fallback badge), plus `doughnut`/`line` helpers in `charts.js`, Leaflet/markercluster CDNs, and deep-link tabs (`#health`). Verified in a Node harness (seeds deterministic; stubbed-fetch live path parses group-bys, bbox points cache) and in headless Chrome against **live GRID3**: KPIs 51,022 facilities / 37 states / 34,680 public / 11,716 private, all 37 state circles drawn on OSM tiles, both charts rendered, HDX indicator fallback badge shown. Acceptance #2 browser-verified (live GRID3 + graceful HDX fallback); #3 needs a zoom interaction check on a device.
