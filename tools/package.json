@@ -1,0 +1,12 @@
+{
+  "name": "healthmgmt-dashboard-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dev-only tooling for the Nigeria Health + PM Dashboard (not part of the runtime app).",
+  "scripts": {
+    "generate:sample": "node generate-sample-xlsx.js"
+  },
+  "dependencies": {
+    "xlsx": "0.18.5"
+  }
+}
