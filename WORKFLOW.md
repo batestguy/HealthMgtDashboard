@@ -33,13 +33,17 @@ Read this before starting any work; follow it for every feature, fix, and releas
    |---------|------|
    | Shell, tabs, boot, shared state | `index.html`, `js/app.js` |
    | Seed data, Excel parse/validate/store | `js/data.js` |
-   | Chart.js wrappers | `js/charts.js` |
+   | Chart.js wrappers (bar/doughnut/line) | `js/charts.js` |
+   | Health data: GRID3 provider, HDX attempt, seeds | `js/health-data.js` |
    | Leaflet map + on-demand loading | `js/map.js` |
+   | Health tab controller (KPIs, badge, refresh) | `js/health.js` |
    | Quiz generation + review | `js/quiz.js` |
    | NLQ engine | `js/nlq.js` |
    | PNG/PDF/share | `js/export.js` |
    | All styles | `css/styles.css` |
    | Seeded workbook source | `tools/generate-sample-xlsx.js` |
+
+   Script order in `index.html`: leaflet → markercluster → data → charts → health-data → map → health → app (app wires everything last).
 
    Keep the script load order in `index.html`: `data.js → charts.js → map.js → quiz.js → nlq.js → export.js → app.js` (app.js wires everything last).
 4. **Preview locally** — serve the folder over HTTP (no bundler, no dev server config):
