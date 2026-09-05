@@ -98,6 +98,51 @@ window.PMCharts = (function () {
     return registry[id];
   }
 
+  // Five-axis capability summary (showcase tab); values are evidence counts.
+  function radar(id, labels, values, opts) {
+    if (typeof Chart === 'undefined') {
+      throw new Error('Chart.js failed to load from CDN.');
+    }
+    destroy(id);
+    var canvas = document.getElementById(id);
+    if (!canvas) return;
+    var options = Object.assign({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          beginAtZero: true,
+          suggestedMax: 8,
+          ticks: { stepSize: 2, font: { size: 9 }, color: '#5b6b7c', backdropColor: 'transparent' },
+          pointLabels: { font: { size: 11, weight: '600' }, color: '#1a202c' },
+          grid: { color: '#eef2f6' },
+          angleLines: { color: '#eef2f6' }
+        }
+      }
+    }, opts || {});
+
+    registry[id] = new Chart(canvas, {
+      type: 'radar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Shipped features',
+          data: values,
+          backgroundColor: 'rgba(0, 135, 81, 0.16)',
+          borderColor: '#008751',
+          borderWidth: 2,
+          pointBackgroundColor: '#f5b041',
+          pointBorderColor: '#ffffff',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: options
+    });
+    return registry[id];
+  }
+
   function line(id, labels, series) {
     if (typeof Chart === 'undefined') {
       throw new Error('Chart.js failed to load from CDN.');
@@ -227,5 +272,5 @@ window.PMCharts = (function () {
     return registry[id];
   }
 
-  return { bar: bar, groupedBar: groupedBar, hbar: hbar, doughnut: doughnut, line: line, destroy: destroy, destroyAll: destroyAll };
+  return { bar: bar, groupedBar: groupedBar, hbar: hbar, doughnut: doughnut, line: line, radar: radar, destroy: destroy, destroyAll: destroyAll };
 })();

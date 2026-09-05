@@ -63,7 +63,9 @@ window.PMApp = (function () {
 
   function tabFromHash() {
     var t = (location.hash || '').replace('#', '');
-    return (t === 'projects' || t === 'health' || t === 'quiz' || t === 'ask' || t === 'export') ? t : 'projects';
+    var known = (t === 'projects' || t === 'health' || t === 'showcase' || t === 'ask' || t === 'export');
+    // Landing view is the 🚀 showcase; unknown/dead hashes (#quiz, …) fall back to it.
+    return known ? t : 'showcase';
   }
 
   function activateTab(name) {
@@ -79,7 +81,7 @@ window.PMApp = (function () {
     });
     // Lazily build a tab the first time it is opened.
     if (name === 'health' && window.PMHealth) window.PMHealth.init();
-    if (name === 'quiz' && window.PMQuiz) window.PMQuiz.init();
+    if (name === 'showcase' && window.PMShowcase) window.PMShowcase.init();
   }
 
   // ---------- Excel upload ----------
@@ -647,7 +649,7 @@ window.PMApp = (function () {
     initTabs();
     initUpload();
     initProjectList();
-    // Deep-link support (#health, #quiz, …) — also used by tab switches.
+    // Deep-link support (#health, #showcase, …) — also used by tab switches.
     activateTab(tabFromHash());
     // Auto-load the seeded sample so the dashboard is demo-ready on first open.
     PMData.loadSample()

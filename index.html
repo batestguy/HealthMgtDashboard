@@ -181,15 +181,132 @@
       <p class="credit">Facilities: GRID3 NGA Health Facilities v2.0 (CC BY 4.0) · Indicators: HDX / WHO — Nigeria Health Indicators</p>
     </section>
 
-    <!-- ============ Tab 3: Quiz ============ -->
-    <section id="tab-quiz" class="tab-panel" aria-label="Quiz">
-      <div class="card quiz-card">
-        <div class="card-head">
-          <h2>🧠 Quiz</h2>
-          <span class="card-tag" id="quiz-score">0/0</span>
+    <!-- ============ Tab 3: This Project (showcase — spec showcase-spec.md) ============ -->
+    <section id="tab-showcase" class="tab-panel" aria-label="This Project">
+      <div class="card show-hero reveal-1">
+        <p class="show-eyebrow">Portfolio project — built from scratch</p>
+        <h2 class="show-h1">A working Nigeria health + project-management dashboard</h2>
+        <p class="show-blurb">It maps 51,000+ real health facilities from a live government data feed, turns
+          uploaded Excel files into charts and project trackers, and keeps working — politely — when the internet
+          doesn’t. No frameworks, no build step: one folder of hand-written files.</p>
+        <div class="show-stats">
+          <div class="show-stat"><span class="kpi-value">51,022</span><span class="kpi-label">health facilities mapped live</span></div>
+          <div class="show-stat"><span class="kpi-value">5</span><span class="kpi-label">interactive sections</span></div>
+          <div class="show-stat"><span class="kpi-value">0</span><span class="kpi-label">frameworks · 0 build step</span></div>
         </div>
-        <div id="quiz-body"></div>
+        <div class="btn-row">
+          <a class="btn btn-secondary" href="https://github.com/batestguy/HealthMgtDashboard" target="_blank" rel="noopener">📁 View the code</a>
+          <button id="btn-copy-email" class="btn btn-ghost" type="button">✉️ Copy email</button>
+        </div>
+        <p class="show-email-line">Reach the builder at <span id="show-email" class="show-email"></span></p>
       </div>
+
+      <div id="card-radar" class="card reveal-1">
+        <div class="card-head">
+          <h2>🎯 Capability radar</h2>
+          <span class="card-tag">evidence-based</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chart-radar" aria-label="Radar of shipped feature counts: data analysis, engineering, live data APIs, UX, and health and PM domain"></canvas></div>
+        <p class="map-hint">Axis values are counts of shipped features in this repository — every point has a
+          working tab or code file behind it.</p>
+      </div>
+
+      <div class="card reveal-1">
+        <div class="card-head">
+          <h2>📂 What this dashboard proves</h2>
+          <span class="card-tag">feature → skill</span>
+        </div>
+
+        <div class="show-evidence">
+          <div class="ev-card">
+            <div class="ev-head"><span class="ev-emoji">📋</span><div class="ev-title">Excel in, dashboard out — in one tap</div></div>
+            <p class="ev-desc">Drag a multi-sheet Excel file onto the Projects tab: KPIs, six charts, filters and a
+              task tracker rebuild instantly. Bad files are rejected with a list of exactly what is wrong.</p>
+            <div class="ev-tags"><span class="skill-tag">Data analysis</span><span class="skill-tag">Data quality</span><span class="skill-tag">UX</span></div>
+            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="projects">Try it →</button>
+          </div>
+
+          <div class="ev-card">
+            <div class="ev-head"><span class="ev-emoji">🏥</span><div class="ev-title">National facility map from live APIs</div></div>
+            <p class="ev-desc">51,022 real facilities stream from a government data API into a zoomable map with
+              per-state aggregates and marker clusters. If the internet dies mid-demo, it falls back to sample data —
+              and says so.</p>
+            <div class="ev-tags"><span class="skill-tag">Live APIs</span><span class="skill-tag">Engineering</span><span class="skill-tag">Health domain</span></div>
+            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="health">Try it →</button>
+          </div>
+
+          <div class="ev-card">
+            <div class="ev-head"><span class="ev-emoji">📈</span><div class="ev-title">Indicator trends + key stats</div></div>
+            <p class="ev-desc">Immunization and malaria trend lines from public health data, plus a toggleable list of
+              key indicators — hospital beds, physicians, maternal mortality and more.</p>
+            <div class="ev-tags"><span class="skill-tag">Data viz</span><span class="skill-tag">Health domain</span></div>
+            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="health">Try it →</button>
+          </div>
+
+          <div class="ev-card">
+            <div class="ev-head"><span class="ev-emoji">🧠</span><div class="ev-title">Ask your data in plain English</div></div>
+            <p class="ev-desc">Type “show top 3 tasks in Lagos” or “how many facilities are in Kano” and the
+              dashboard answers — typo-tolerant, multi-intent, no AI backend required.</p>
+            <div class="ev-tags"><span class="skill-tag">NLQ design</span><span class="skill-tag">UX</span><span class="skill-tag">Data analysis</span></div>
+            <span class="coming-next">coming next</span>
+          </div>
+
+          <div class="ev-card">
+            <div class="ev-head"><span class="ev-emoji">📤</span><div class="ev-title">One-tap reports</div></div>
+            <p class="ev-desc">Snapshot the current view as a PNG, export a full multi-section PDF report, and copy a
+              share link for anyone to open.</p>
+            <div class="ev-tags"><span class="skill-tag">Engineering</span><span class="skill-tag">UX</span></div>
+            <span class="coming-next">coming next</span>
+          </div>
+
+          <div class="ev-card ev-underline">
+            <div class="ev-head"><span class="ev-emoji">🛠</span><div class="ev-title">Under the hood</div></div>
+            <ul class="ev-list">
+              <li>Vanilla JavaScript only — one small hand-written module per tab, no framework</li>
+              <li>Every library loaded from a CDN; deploys as static files to GitHub Pages</li>
+              <li>Live APIs wrapped with graceful fallbacks and a visible “sample data” badge</li>
+              <li>A spec and a workflow doc drive every change; the git history shows the build, slice by slice</li>
+            </ul>
+            <div class="ev-tags"><span class="skill-tag">Architecture</span><span class="skill-tag">Process rigor</span><span class="skill-tag">Git</span></div>
+            <a class="btn btn-ghost btn-sm" href="https://github.com/batestguy/HealthMgtDashboard" target="_blank" rel="noopener">Read the code →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal-2">
+        <div class="card-head">
+          <h2>🧰 Toolchain</h2>
+        </div>
+        <p class="show-subhead">Shipped in this repository</p>
+        <div class="show-chips">
+          <span class="tool-chip proven">Vanilla JavaScript</span>
+          <span class="tool-chip proven">HTML5 + CSS3</span>
+          <span class="tool-chip proven">Chart.js</span>
+          <span class="tool-chip proven">Leaflet + clusters</span>
+          <span class="tool-chip proven">SheetJS (Excel)</span>
+          <span class="tool-chip proven">Git + GitHub Pages</span>
+          <span class="tool-chip proven">ArcGIS REST API</span>
+        </div>
+        <p class="show-subhead adjacent">Adjacent toolbox</p>
+        <div class="show-chips">
+          <span class="tool-chip adjacent">SQL</span>
+          <span class="tool-chip adjacent">Python</span>
+          <span class="tool-chip adjacent">Power BI</span>
+          <span class="tool-chip adjacent">API design</span>
+          <span class="tool-chip adjacent">Agile / PM delivery</span>
+        </div>
+      </div>
+
+      <div class="card show-cta reveal-3">
+        <h2>Like what you see?</h2>
+        <p class="show-blurb">The full source — including this page — is open. Code speaks louder than a CV.</p>
+        <div class="btn-row">
+          <a class="btn btn-secondary" href="https://github.com/batestguy/HealthMgtDashboard" target="_blank" rel="noopener">📁 View the code</a>
+          <button id="btn-copy-email-2" class="btn btn-ghost" type="button">✉️ Copy email</button>
+        </div>
+      </div>
+
+      <p class="credit">Built by hand — data: GRID3 NGA Health Facilities v2.0 (CC BY 4.0) · HDX/WHO. Font: Fraunces.</p>
     </section>
 
     <!-- ============ Tab 4: Ask (placeholder) ============ -->
@@ -206,7 +323,7 @@
   <nav class="tab-bar" role="tablist" aria-label="Dashboard sections">
     <button class="tab-btn active" data-tab="projects" role="tab" aria-selected="true">📋<span>Projects</span></button>
     <button class="tab-btn" data-tab="health" role="tab" aria-selected="false">🏥<span>Health</span></button>
-    <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">🧠<span>Quiz</span></button>
+    <button class="tab-btn" data-tab="showcase" role="tab" aria-selected="false">🚀<span>This Project</span></button>
     <button class="tab-btn" data-tab="ask" role="tab" aria-selected="false">💬<span>Ask</span></button>
     <button class="tab-btn" data-tab="export" role="tab" aria-selected="false">📤<span>Export</span></button>
   </nav>
@@ -221,7 +338,7 @@
   <script src="js/health-data.js"></script>
   <script src="js/map.js"></script>
   <script src="js/health.js"></script>
-  <script src="js/quiz.js"></script>
+  <script src="js/showcase.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
