@@ -764,6 +764,7 @@ body {
   padding-left: 18px;
 }
 .nlq-list li { margin: 4px 0; font-size: 0.86rem; color: var(--muted); }
+.nlq-open { margin-top: 8px; }
 .nlq-hint {
   margin: 14px 0 8px;
   font-size: 0.78rem;

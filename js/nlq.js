@@ -299,16 +299,16 @@ window.PMNlq = (function () {
       if (plan.assignee) {
         var mine = (ds.tasks || []).filter(function (t) { return t.Assignee === plan.assignee; });
         renderAnswer(answer, mine.length + ' task' + (mine.length === 1 ? '' : 's') + ' assigned to ' + plan.assignee + '.', null);
-        goto('projects');
+        offerOpen(answer, 'projects');
         return;
       }
       if (plan.thisMonth) {
         var due = tasksDueThisMonth(ds);
         renderAnswer(answer,
           due.length + ' task' + (due.length === 1 ? '' : 's') + ' due this month.' +
-          (due.length ? ' Showing them in the tracker.' : ''),
+          (due.length ? ' They’re shown in the tracker on the Projects tab.' : ''),
           due.map(function (t) { return t.Title + ' — ' + t.DueDate; }));
-        goto('projects');
+        offerOpen(answer, 'projects');
         return;
       }
       if (plan.intents.rank) {
@@ -324,11 +324,11 @@ window.PMNlq = (function () {
         renderAnswer(answer,
           'Top ' + weighted.length + ' task' + (weighted.length === 1 ? '' : 's') + ' by priority:',
           weighted.map(function (t) { return t.Title + ' · ' + (names[t.ProjectID] || t.ProjectID) + ' · due ' + (t.DueDate || '—'); }));
-        goto('projects');
+        offerOpen(answer, 'projects');
         return;
       }
       renderAnswer(answer, (ds.tasks || []).length + ' tasks across the portfolio — the tracker is sorted by status then due date.', null);
-      goto('projects');
+      offerOpen(answer, 'projects');
       return;
     }
 
@@ -343,12 +343,12 @@ window.PMNlq = (function () {
       if (plan.intents.rank) {
         var top = (ds.projects || []).slice().sort(function (a, b) { return (Number(b.Budget) || 0) - (Number(a.Budget) || 0); })[0];
         renderAnswer(answer, top.Name + ' has the highest budget — ' + fmtNaira(Number(top.Budget) || 0) + '.', null);
-        goto('projects');
+        offerOpen(answer, 'projects');
         return;
       }
       var totalBudget = (ds.projects || []).reduce(function (s, p) { return s + (Number(p.Budget) || 0); }, 0);
       renderAnswer(answer, 'Total portfolio budget: ' + fmtNaira(totalBudget) + ' across ' + (ds.projects || []).length + ' projects.', null);
-      goto('projects');
+      offerOpen(answer, 'projects');
       return;
     }
 
@@ -361,9 +361,9 @@ window.PMNlq = (function () {
         }
         renderAnswer(answer,
           inState.length + ' project' + (inState.length === 1 ? '' : 's') + ' in ' + plan.state +
-          (inState.length ? ' — filters applied on the Projects tab.' : ' — nothing matches, filters cleared.'),
+          (inState.length ? ' — filters applied; open the Projects tab to see them.' : ' — nothing matches, filters cleared.'),
           inState.map(function (p) { return p.Name + ' · ' + p.Status; }));
-        goto('projects');
+        offerOpen(answer, 'projects');
         return;
       }
       if (plan.intents.rank && plan.rankField === 'completion') {
@@ -373,7 +373,7 @@ window.PMNlq = (function () {
         }).slice(0, n2);
         renderAnswer(answer, 'Top ' + byComp.length + ' project' + (byComp.length === 1 ? '' : 's') + ' by completion:',
           byComp.map(function (p) { return p.Name + ' · ' + Math.round(projectCompletion(p, tasksByP)) + '% complete'; }));
-        goto('projects');
+        offerOpen(answer, 'projects');
         return;
       }
       // show projects / portfolio
@@ -382,7 +382,7 @@ window.PMNlq = (function () {
       }
       renderAnswer(answer, 'Here are all ' + (ds.projects || []).length + ' projects:',
         (ds.projects || []).map(function (p) { return p.Name + ' · ' + p.Status; }));
-      goto('projects');
+      offerOpen(answer, 'projects');
       return;
     }
 
@@ -392,7 +392,7 @@ window.PMNlq = (function () {
       renderAnswer(answer,
         (ds.projects || []).length + ' projects · ' + taskCount + ' tasks · total budget ' +
         fmtNaira((ds.projects || []).reduce(function (s, p) { return s + (Number(p.Budget) || 0); }, 0)) + '.', null);
-      goto('projects');
+      offerOpen(answer, 'projects');
       return;
     }
 
@@ -415,10 +415,10 @@ window.PMNlq = (function () {
         var top = agg.byState.slice().sort(function (a, b) { return b.count - a.count; }).slice(0, 5);
         var lines = top.map(function (g) { return g.key + ' — ' + g.count.toLocaleString() + ' facilities'; });
         renderAnswer(answer, 'Facility counts by state (top 5 of ' + agg.byState.length + '):', lines);
-        goto('health');
+        offerOpen(answer, 'health');
       }).catch(function () {
         renderAnswer(answer, 'Could not fetch facility data — the Health tab shows whatever it last loaded.', null);
-        goto('health');
+        offerOpen(answer, 'health');
       });
       return;
     }
@@ -428,22 +428,22 @@ window.PMNlq = (function () {
         var label = plan.ownership ? (plan.ownership === 'Public' ? 'public' : 'private') + ' facilities' : 'facilities';
         renderAnswer(answer, r.count.toLocaleString() + ' ' + label + ' in ' + plan.state +
           (r.source === 'sample' ? ' (sample data — live feed unavailable).' : '.'), null);
-        goto('health');
+        offerOpen(answer, 'health');
       }).catch(function () {
         renderAnswer(answer, 'Could not count facilities in ' + plan.state + ' right now.', null);
-        goto('health');
+        offerOpen(answer, 'health');
       });
       return;
     }
 
     // Plain "show facilities"
     hd.loadFacilityAggregates().then(function (agg) {
-      renderAnswer(answer, agg.total.toLocaleString() + ' health facilities across ' + agg.statesCovered + ' states — map opened.',
+      renderAnswer(answer, agg.total.toLocaleString() + ' health facilities across ' + agg.statesCovered + ' states — open the map to explore.',
         [agg.ownership.Public.toLocaleString() + ' public · ' + agg.ownership.Private.toLocaleString() + ' private']);
-      goto('health');
+      offerOpen(answer, 'health');
     }).catch(function () {
-      renderAnswer(answer, 'Could not load facility data right now — opening the Health tab anyway.', null);
-      goto('health');
+      renderAnswer(answer, 'Could not load facility data right now — try again in a moment.', null);
+      offerOpen(answer, 'health');
     });
   }
 
@@ -472,6 +472,18 @@ window.PMNlq = (function () {
     if (window.PMApp && window.PMApp.goto) { window.PMApp.goto(name); return; }
     var btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
     if (btn) btn.click();
+  }
+
+  // Answers stay visible on the Ask tab; this adds an optional jump link so
+  // the user can open the tab the query acted on (avoids yanking them away
+  // from the answer they just asked for).
+  function offerOpen(container, tabName) {
+    if (!container) return;
+    var label = tabName === 'health' ? 'Open facility map →' : 'Open Projects tab →';
+    var btn = el('button', 'btn btn-ghost btn-sm nlq-open', label);
+    btn.type = 'button';
+    btn.addEventListener('click', function () { goto(tabName); });
+    container.appendChild(btn);
   }
 
   function buildChips() {
