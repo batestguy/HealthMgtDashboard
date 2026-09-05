@@ -9,7 +9,9 @@
   <!-- Non-blocking: page paints with fallback typeface, Fraunces swaps in when ready -->
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="css/styles.css">
+  <!-- NOTE: bump the ?v= on every local css/js link when app files change —
+       GitHub Pages caches assets, so a fresh value forces browsers to refetch. -->
+  <link rel="stylesheet" href="css/styles.css?v=3">
   <!-- Runtime libraries (CDN only — no build step, per spec §3.2) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -333,12 +335,12 @@
   <!-- App scripts: data → charts → health-data → map → health → app (app wires everything, per spec §3.1) -->
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/health-data.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/health.js"></script>
-  <script src="js/showcase.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/data.js?v=3"></script>
+  <script src="js/charts.js?v=3"></script>
+  <script src="js/health-data.js?v=3"></script>
+  <script src="js/map.js?v=3"></script>
+  <script src="js/health.js?v=3"></script>
+  <script src="js/showcase.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
 </body>
 </html>
