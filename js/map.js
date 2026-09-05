@@ -75,13 +75,15 @@ window.PMMap = (function () {
     aggregates.byState.forEach(function (g) {
       var c = centroids[g.key];
       if (!c) return; // state centroid table lacks the key
-      var radius = 5 + Math.sqrt(g.count) * 0.5;
+      // Keep aggregate circles compact: sqrt scale with a small coefficient
+      // and a low cap, so big states (thousands of facilities) never blob out.
+      var radius = 3 + Math.sqrt(g.count) * 0.15;
       var marker = L.circleMarker([c[0], c[1]], {
-        radius: Math.min(radius, 26),
+        radius: Math.min(radius, 18),
         color: '#ffffff',
-        weight: 1.5,
+        weight: 1,
         fillColor: '#008751',
-        fillOpacity: 0.55
+        fillOpacity: 0.5
       });
       marker.bindTooltip(g.key + ': ' + g.count.toLocaleString() + ' facilities', { direction: 'top' });
       marker.on('click', function () {
