@@ -44,6 +44,9 @@ window.PMHealth = (function () {
         renderKpis(agg);
         PMMap.renderAggregates(agg);
         PMMap.invalidateSize();
+        // Re-frame Nigeria once the container definitely has its final size
+        // (first open + every refresh) so no southern states are cropped.
+        setTimeout(function () { PMMap.fitToNigeria(); }, 150);
         renderTypeChart(agg);
         renderTrendChart(ind);
         renderKeyIndicators(ind.keyIndicators);

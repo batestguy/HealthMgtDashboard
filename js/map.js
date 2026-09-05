@@ -13,6 +13,11 @@ window.PMMap = (function () {
   'use strict';
 
   var DETAIL_ZOOM = 8;
+  // Padded country box: full Nigeria frame for the initial view (southern
+  // states included), and a wider maxBounds so panning never drifts to the
+  // whole continent.
+  var NIGERIA_FRAME = [[4.0, 2.7], [14.1, 14.8]];
+  var MAX_BOUNDS = [[2.5, 1.0], [15.0, 15.5]];
   var map = null;
   var aggLayer = null;
   var clusterLayer = null;
@@ -33,15 +38,16 @@ window.PMMap = (function () {
     var container = document.getElementById(containerId);
     if (!container) return false;
 
-    // Nigeria-focused framing: minZoom 6 + padded country maxBounds so the
-    // basemap never zooms out to the whole continent (slow tile load, clutter).
+    // Nigeria-focused framing: minZoom 5 + padded country maxBounds so the
+    // basemap never zooms out to the whole continent (slow tile load, clutter),
+    // while the initial view fits ALL of Nigeria — southern states included.
     map = L.map(container, {
       zoomControl: true,
-      minZoom: 6,
-      maxBounds: [[2.5, 1.0], [15.0, 15.5]],
+      minZoom: 5,
+      maxBounds: MAX_BOUNDS,
       maxBoundsViscosity: 0.8
     });
-    map.setView([9.0, 8.0], 6);
+    fitToNigeria();
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -121,12 +127,19 @@ window.PMMap = (function () {
     if (map) setTimeout(function () { map.invalidateSize(); }, 60);
   }
 
+  // Frame the whole country (narrow screens drop to zoom 5 to fit it).
+  function fitToNigeria() {
+    if (!map) return;
+    map.fitBounds(NIGERIA_FRAME, { padding: [12, 12], maxZoom: 6 });
+  }
+
   function getMap() { return map; }
 
   return {
     init: init,
     renderAggregates: renderAggregates,
     invalidateSize: invalidateSize,
+    fitToNigeria: fitToNigeria,
     isReady: function () { return initialized; },
     getMap: getMap
   };
