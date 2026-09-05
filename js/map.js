@@ -33,7 +33,15 @@ window.PMMap = (function () {
     var container = document.getElementById(containerId);
     if (!container) return false;
 
-    map = L.map(container, { zoomControl: true }).setView([9.5, 8.0], 6);
+    // Nigeria-focused framing: minZoom 6 + padded country maxBounds so the
+    // basemap never zooms out to the whole continent (slow tile load, clutter).
+    map = L.map(container, {
+      zoomControl: true,
+      minZoom: 6,
+      maxBounds: [[2.5, 1.0], [15.0, 15.5]],
+      maxBoundsViscosity: 0.8
+    });
+    map.setView([9.0, 8.0], 6);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
