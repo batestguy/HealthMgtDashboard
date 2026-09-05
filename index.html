@@ -11,7 +11,7 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet"></noscript>
   <!-- NOTE: bump the ?v= on every local css/js link when app files change —
        GitHub Pages caches assets, so a fresh value forces browsers to refetch. -->
-  <link rel="stylesheet" href="css/styles.css?v=4">
+  <link rel="stylesheet" href="css/styles.css?v=5">
   <!-- Runtime libraries (CDN only — no build step, per spec §3.2) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -250,7 +250,7 @@
             <p class="ev-desc">Type “show top 3 tasks in Lagos” or “how many facilities are in Kano” and the
               dashboard answers — typo-tolerant, multi-intent, no AI backend required.</p>
             <div class="ev-tags"><span class="skill-tag">NLQ design</span><span class="skill-tag">UX</span><span class="skill-tag">Data analysis</span></div>
-            <span class="coming-next">coming next</span>
+            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="ask">Try it →</button>
           </div>
 
           <div class="ev-card">
@@ -311,9 +311,29 @@
       <p class="credit">Built by hand — data: GRID3 NGA Health Facilities v2.0 (CC BY 4.0) · HDX/WHO. Font: Fraunces.</p>
     </section>
 
-    <!-- ============ Tab 4: Ask (placeholder) ============ -->
+    <!-- ============ Tab 4: Ask (NLQ — spec §6 Tab 4) ============ -->
     <section id="tab-ask" class="tab-panel" aria-label="Ask">
-      <div class="card"><h2>💬 Ask</h2><p class="summary-text">Natural language queries over your projects and health data — coming in the next build step.</p></div>
+      <div class="card">
+        <div class="card-head">
+          <h2>💬 Ask</h2>
+          <span class="card-tag">your data · plain English</span>
+        </div>
+        <form id="nlq-form" class="nlq-form" autocomplete="off">
+          <input id="nlq-input" class="nlq-input" type="text"
+                 placeholder="Try “show top 3 tasks in Lagos”"
+                 aria-label="Ask a question about your data" enterkeyhint="search">
+          <button id="btn-nlq-go" class="btn btn-secondary" type="submit">Ask</button>
+        </form>
+        <div id="nlq-answer" class="nlq-answer" aria-live="polite"></div>
+        <p class="nlq-hint">Examples — tap to run:</p>
+        <div id="nlq-chips" class="chips" role="group" aria-label="Example questions"></div>
+      </div>
+      <div class="card">
+        <h2>💡 How it works</h2>
+        <p class="summary-text">A simulated NLQ engine — typo-tolerant keyword matching over the loaded Excel data
+          and the live health feed. Queries filter the dashboard, open tabs, and answer with real numbers. No AI
+          backend; every answer is computed from the data you see.</p>
+      </div>
     </section>
 
     <!-- ============ Tab 5: Export (placeholder) ============ -->
@@ -335,12 +355,13 @@
   <!-- App scripts: data → charts → health-data → map → health → app (app wires everything, per spec §3.1) -->
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="js/data.js?v=4"></script>
-  <script src="js/charts.js?v=4"></script>
-  <script src="js/health-data.js?v=4"></script>
-  <script src="js/map.js?v=4"></script>
-  <script src="js/health.js?v=4"></script>
-  <script src="js/showcase.js?v=4"></script>
-  <script src="js/app.js?v=4"></script>
+  <script src="js/data.js?v=5"></script>
+  <script src="js/charts.js?v=5"></script>
+  <script src="js/health-data.js?v=5"></script>
+  <script src="js/map.js?v=5"></script>
+  <script src="js/health.js?v=5"></script>
+  <script src="js/showcase.js?v=5"></script>
+  <script src="js/nlq.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>

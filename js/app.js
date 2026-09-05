@@ -82,6 +82,7 @@ window.PMApp = (function () {
     // Lazily build a tab the first time it is opened.
     if (name === 'health' && window.PMHealth) window.PMHealth.init();
     if (name === 'showcase' && window.PMShowcase) window.PMShowcase.init();
+    if (name === 'ask' && window.PMNlq) window.PMNlq.init();
   }
 
   // ---------- Excel upload ----------
@@ -669,5 +670,20 @@ window.PMApp = (function () {
     init();
   }
 
-  return { toast: toast };
+  // ---------- APIs for the NLQ engine (js/nlq.js) ----------
+  function goto(name) {
+    var btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
+    if (btn) { btn.click(); return; }
+    activateTab(name);
+  }
+
+  function setProjectFilters(next) {
+    if (next) {
+      if (next.status !== undefined) filters.status = next.status;
+      if (next.region !== undefined) filters.region = next.region;
+    }
+    if (PMData.hasData()) renderAll();
+  }
+
+  return { toast: toast, goto: goto, setProjectFilters: setProjectFilters, loadSample: loadSample };
 })();

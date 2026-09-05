@@ -37,13 +37,13 @@ Read this before starting any work; follow it for every feature, fix, and releas
    | Health data: GRID3 provider, HDX attempt, seeds | `js/health-data.js` |
    | Leaflet map + on-demand loading | `js/map.js` |
    | Health tab controller (KPIs, badge, refresh) | `js/health.js` |
-   | Quiz generation + review | `js/quiz.js` |
-   | NLQ engine | `js/nlq.js` |
-   | PNG/PDF/share | `js/export.js` |
+   | Recruiter showcase tab (radar, evidence, copy-email) | `js/showcase.js` |
+   | NLQ engine (Ask tab) | `js/nlq.js` |
+   | PNG/PDF/share | `js/export.js` (pending) |
    | All styles | `css/styles.css` |
    | Seeded workbook source | `tools/generate-sample-xlsx.js` |
 
-   Script order in `index.html`: leaflet → markercluster → data → charts → health-data → map → health → quiz → app (app wires everything last). Add `nlq.js` before `app.js` when Ask ships, then `export.js` — keep `app.js` last.
+   Script order in `index.html`: leaflet → markercluster → data → charts → health-data → map → health → showcase → nlq → app (app wires everything last). Add `export.js` before `app.js` when Export ships — keep `app.js` last.
 4. **Preview locally** — serve the folder over HTTP (no bundler, no dev server config):
 
    ```bash

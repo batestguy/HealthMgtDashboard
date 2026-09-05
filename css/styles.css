@@ -724,6 +724,53 @@ body {
 .show-cta { text-align: center; }
 .show-cta .show-blurb { margin-bottom: 4px; }
 
+/* ==========================================================================
+   Ask tab — simulated NLQ (spec §6 Tab 4)
+   ========================================================================== */
+
+.nlq-form {
+  display: flex;
+  gap: 8px;
+}
+.nlq-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1.5px solid #dfe6ec;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.nlq-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 135, 81, 0.15);
+}
+.nlq-answer {
+  margin-top: 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid #e8eef4;
+  padding: 12px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.nlq-answer:empty { display: none; }
+.nlq-reply { margin: 0 0 4px; line-height: 1.5; }
+.nlq-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+.nlq-list li { margin: 4px 0; font-size: 0.86rem; color: var(--muted); }
+.nlq-hint {
+  margin: 14px 0 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 /* ---------- Hidden helper ---------- */
 .hidden { display: none !important; }
 

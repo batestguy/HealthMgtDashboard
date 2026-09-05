@@ -8,14 +8,14 @@
 
 ## 1. Executive Summary
 
-A **mobile-first dashboard** combining project management (multi-sheet Excel import), live Nigerian health data (GRID3 facilities + HDX indicators), a simulated natural-language query, an interactive quiz, and export/share — all in **static files with no build step** and no backend.
+A **mobile-first dashboard** combining project management (multi-sheet Excel import), live Nigerian health data (GRID3 facilities + HDX indicators), a simulated natural-language query, a recruiter-facing project showcase, and export/share — all in **static files with no build step** and no backend.
 
 ### Locked decisions (interview log)
 
 | # | Topic | Decision |
 |---|-------|----------|
 | 1 | File structure | **Multi-file** — `index.html` + separate `css/` and `js/` (no bundler; plain script tags) |
-| 2 | v1 scope | **All 5 tabs** ship in v1 (Projects, Health, Quiz, Ask, Export) |
+| 2 | v1 scope | **All 5 tabs** ship in v1 (Projects, Health, 🚀 showcase, Ask, Export) — Quiz retired 2026-09-05 (showcase-spec.md) |
 | 3 | Audience | **Balanced** — 5 equal tabs; no single persona dominates; info density tuned to mobile |
 | 4 | Map data strategy | **On-demand by zoom** — LGA/state aggregate counts by default; detailed facility points fetched only when zoomed in |
 | 5 | Excel template | **Downloadable sample `.xlsx` template** (multi-sheet) + in-app "load sample data" button |
@@ -191,7 +191,9 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 | Refresh button | Manually re-fetch live GRID3 + HDX; updates badge accordingly. |
 | Fallback badge | Always visible when seeded data is displayed (decision #7). |
 
-### Tab 3: 🧠 Quiz
+### Tab 3: 🚀 This Project — recruiter showcase
+
+**Retired the Quiz tab 2026-09-05.** Full spec in `showcase-spec.md` (decisions S1–S14): hero + evidence-based radar, feature→skill cards with Try-it deep links, toolchain chips (repo-proven + adjacent), copy-email + GitHub CTAs, default landing tab, Quiz code deleted repo-wide.
 
 | Feature | Precise behavior |
 |---------|------------------|
@@ -253,7 +255,7 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 ## 8. Deployment (decision #18) — status: in progress
 
 - **Repo:** `batestguy/HealthMgtDashboard` — created 2026-09-04, `main` branch, public (https://github.com/batestguy/HealthMgtDashboard).
-- **GitHub Pages:** enabled, deploy from `main` at root. **Live URL: `https://batestguy.github.io/HealthMgtDashboard/`** (this is the Share Link the Export tab copies). First `index.html` committed 2026-09-04 — the live site serves the dashboard shell with Projects, Health, and Quiz built (Ask + Export pending).
+- **GitHub Pages:** enabled, deploy from `main` at root. **Live URL: `https://batestguy.github.io/HealthMgtDashboard/`** (this is the Share Link the Export tab copies). First `index.html` committed 2026-09-04 — the live site serves the dashboard shell with Projects, Health, 🚀 showcase, and Ask built (Export pending).
 - All libraries stay on CDN (no build artifacts to commit beyond source + `assets/sample-data.xlsx`).
 - Verify live URL works on iPhone (Safari) and Android (Chrome) before sign-off (testing devices: **both available**).
 - (Optional later) `CNAME` for custom domain.
@@ -266,7 +268,7 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 - [ ] Excel upload works with complex multi-sheet files (Projects/Tasks/Resources/Finances/Locations), with per-sheet error reporting.
 - [ ] Health data (GRID3 aggregates + HDX indicators) loads within 3s or gracefully falls back with visible badge.
 - [ ] Map clusters correctly and loads facility points on demand by zoom.
-- [ ] Quiz shows a mix of static and dynamic questions; results screen with review.
+- [ ] 🚀 showcase renders (hero stats, evidence radar, feature→skill cards, copy-email, default landing). Quiz retired.
 - [ ] NLQ understands ≥10 keyword combos including fuzzy/typo tolerance and multi-intent queries.
 - [ ] Fully usable on a 375×812 phone (44px targets, bottom tabs).
 - [ ] All charts render without console errors.
@@ -309,3 +311,5 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 - 2026-09-04 — **Quiz tab shipped.** Files: `js/quiz.js` (5 static Nigeria health/PM trivia + up to 7 dynamic questions generated from the loaded dataset — budget, highest-budget, total planned spend, tasks-per-assignee, projects-per-status templates; option-shuffled so the correct answer isn't position-predictable), one-at-a-time flow with `Q X of Y • Batch Z` progress (batches of 3), instant right/wrong feedback with the correct answer shown, running `score/total` in the card header, Reset (new randomized pool), and a results screen with an animated score ring, pass/warn/fail verdict, and per-question review (user answer vs correct answer + topic tag). Quiz falls back to the seeded sample when no Excel data is loaded. Verified in a Node harness (pool composition 5+7, answer correctness recomputed independently for every dynamic template, option uniqueness across repeated shuffled runs, static-only fallback on an empty dataset) and in headless Chrome: a DOM drive page exercised the real module end-to-end — start → answer → feedback → results → review → restart (14/14 checks, `QUIZ_DRIVE_OK`), and the live `index.html#quiz` deep-link renders the start screen with zero console errors. Screenshot in `output/playwright/quiz-live.png`.
 - 2026-09-04 — **Health tab shipped.** Files: `js/health-data.js` (GRID3 FeatureServer provider + HDX HAPI attempt + deterministic seeds + state centroids), `js/map.js` (Leaflet aggregates + zoom-8 bbox point loading with marker clusters), `js/health.js` (KPIs, doughnut, trend lines, configurable key indicators, refresh, fallback badge), plus `doughnut`/`line` helpers in `charts.js`, Leaflet/markercluster CDNs, and deep-link tabs (`#health`). Verified in a Node harness (seeds deterministic; stubbed-fetch live path parses group-bys, bbox points cache) and in headless Chrome against **live GRID3**: KPIs 51,022 facilities / 37 states / 34,680 public / 11,716 private, all 37 state circles drawn on OSM tiles, both charts rendered, HDX indicator fallback badge shown. Acceptance #2 browser-verified (live GRID3 + graceful HDX fallback); #3 needs a zoom interaction check on a device.
 - 2026-09-05 — **Render speed + map framing fixes.** (1) The Google Fonts stylesheet was render-blocking — `index.html` now loads Fraunces non-blocking (`media="print"` + `onload` swap + `<noscript>` fallback) so the page paints with the system fallback face immediately and swaps when the webfont arrives. (2) `js/map.js` now pins the map to Nigeria: `minZoom: 6` plus a padded-country `maxBounds` (`[[2.5,1.0],[15.0,15.5]]`) with `maxBoundsViscosity: 0.8`, and the initial view is `[9.0, 8.0]` at zoom 6 — the basemap can no longer zoom out to all of Africa (which was fetching hundreds of tiles — the slowness — and rendering continent clutter). Point clusters still appear on zoom to level 8+. Verified: map initializes cleanly under the new options in a real-browser probe, and a fresh headless render of `#health` captures with tiles drawn (screenshot `output/playwright/map-nigeria.png`).
+- 2026-09-05 — **Quiz retired; 🚀 showcase shipped** (commit `1480515`, per `showcase-spec.md` S1–S14). Quiz markup, `js/quiz.js`, quiz CSS, and the 🧠 tab button deleted; tab 3 is now the recruiter-facing showcase (hero stats, evidence-based capability radar via new `PMCharts.radar`, feature→skill cards with Try-it deep links into Projects/Health, toolchain chips, copy-email + GitHub CTAs). The app lands on the showcase by default; dead `#quiz` hashes fall back to it. Follow-ups: map reframed to show all of Nigeria including the southern states (`59c1313` — `fitBounds` + `minZoom` 5, re-fit on render), state-circle sizes shrunk (`9b684f0` — sqrt·0.15, 18px cap), and local assets cache-busted with `?v=` (`d8919a5`, bumped to v4) because Pages caches ~10 min.
+- 2026-09-05 — **Ask (NLQ) tab shipped.** `js/nlq.js`: simulated fuzzy multi-intent engine — Levenshtein-based typo tolerance (allowed distance scales with token length so 3–4-letter filler words can't false-match the vocabulary), intents compose (display · rank · aggregate · finance · task · health), entities resolved from the loaded dataset (36 states + FCT with aliases, assignees, project names/IDs, `top N`, `this month`, public/private ownership), and actions drive the real dashboard through new `PMApp` APIs (`goto`, `setProjectFilters`, `loadSample`). Health answers use live GRID3 count queries with a seeded fallback (`countFacilitiesInState`). 12 example chips cover the §6 acceptance set. Verified with a Node harness against the real sample workbook: **17/17 checks** (all 12 acceptance combos + typos `showw`/`lagis`/`budgt` + compound "top 3 tasks in lagos" + gibberish fallback). The matcher caught two real bugs during the harness run: `levenshtein` returned distances above the allowed bound, and short tokens over-matched — both fixed.

@@ -250,6 +250,7 @@ window.PMHealthData = (function () {
           name: level + ' — ' + state + ' #' + (i + 1),
           ownership: own,
           level: level,
+          state: state,
           lat: +(c[0] + (rand() - 0.5) * 1.1).toFixed(5),
           lng: +(c[1] + (rand() - 0.5) * 1.1).toFixed(5)
         });
@@ -294,6 +295,26 @@ window.PMHealthData = (function () {
     }));
   }
 
+  // Count facilities in one state, optionally filtered by ownership (NLQ
+  // answers, spec §6 Tab 4). Live GRID3 count query, seeded fallback.
+  function countFacilitiesInState(state, ownership) {
+    var esc = String(state).replace(/'/g, "''");
+    var where = "UPPER(state) = UPPER('" + esc + "')";
+    if (ownership) where += " AND UPPER(ownership) = UPPER('" + String(ownership).replace(/'/g, "''") + "')";
+    var url = GRID3_LAYER + '/query?where=' + encodeURIComponent(where) +
+      '&returnCountOnly=true&f=json';
+    return timeoutFetch(url, 12000).then(function (json) {
+      var c = Number(json.count);
+      if (!isFinite(c)) throw new Error('no count');
+      return { count: c, source: 'live' };
+    }).catch(function () {
+      var pts = getSeedPoints().filter(function (p) {
+        return p.state === state && (!ownership || p.ownership === ownership);
+      });
+      return { count: pts.length, source: 'sample' };
+    });
+  }
+
   // ------------------------------------------------------------------------
   // Public API
   // ------------------------------------------------------------------------
@@ -319,6 +340,7 @@ window.PMHealthData = (function () {
     loadIndicators: loadIndicators,
     fetchPointsInBBox: fetchPointsInBBox,
     fetchSeedPointsInBBox: fetchSeedPointsInBBox,
+    countFacilitiesInState: countFacilitiesInState,
     getStateCentroids: getStateCentroids,
     currentState: currentState,
     resetSession: resetSession,
