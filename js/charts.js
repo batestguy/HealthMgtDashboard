@@ -133,6 +133,15 @@ window.PMCharts = (function () {
   var PALETTE = [token('green'), token('gold'), token('green-soft'), token('bad'), token('info'), token('ink-faint')];
   function colorFor(i) { return PALETTE[i % PALETTE.length] || '#a0aec0'; }
 
+  // Distinct two-color scheme for health trend lines so the two series never
+  // collide (the global PALETTE assigns the same gold to both the 1st and 2nd
+  // series in some renderings). Green = immunization/coverage (up is good);
+  // deep gold = malaria prevalence (down is good) — kept visually distinct
+  // from the doughtnut ring and from each other.
+  function healthTrendColors(i) {
+    return i === 0 ? token('green') : token('gold-deep');
+  }
+
   function doughnut(id, labels, values) {
     if (typeof Chart === 'undefined') {
       throw new Error('Chart.js failed to load from CDN.');
@@ -189,7 +198,7 @@ window.PMCharts = (function () {
       data: {
         labels: labels,
         datasets: series.map(function (s, i) {
-          var base = i === 0 ? token('green') : colorFor(i);
+          var base = healthTrendColors(i);
           return {
             label: s.label,
             data: s.data,
@@ -197,7 +206,7 @@ window.PMCharts = (function () {
             backgroundColor: i === 0 ? grad : 'transparent',
             tension: 0.35,
             pointRadius: 3,
-            pointBackgroundColor: token('gold'),
+            pointBackgroundColor: i === 0 ? token('gold') : token('card'),
             pointBorderColor: token('card'),
             pointBorderWidth: 1.5,
             borderWidth: 2.5,
