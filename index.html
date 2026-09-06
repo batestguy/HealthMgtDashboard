@@ -21,7 +21,7 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"></noscript>
   <!-- NOTE: bump the ?v= on every local css/js link when app files change —
        GitHub Pages caches assets, so a fresh value forces browsers to refetch. -->
-  <link rel="stylesheet" href="css/styles.css?v=9">
+  <link rel="stylesheet" href="css/styles.css?v=10">
   <!-- Runtime libraries (CDN only — no build step, per spec §3.2) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -424,8 +424,11 @@
         </div>
         <div class="card export-card export-deferred">
           <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-export"></use></svg>Export as PDF</h2>
-          <p class="summary-text">A multi-section PDF report — KPIs, charts, the facility map, and the latest answer — is next.</p>
-          <span class="coming-next">coming next</span>
+          <p class="summary-text">A multi-section PDF report — KPIs, charts, the facility map, and the latest answer — always green & gold on paper, regardless of your active theme.</p>
+          <div class="export-actions">
+            <button id="btn-export-pdf" class="btn btn-secondary" type="button"><svg aria-hidden="true"><use href="#pm-export"></use></svg>Download PDF report</button>
+            <span id="export-pdf-status" class="export-status" hidden></span>
+          </div>
         </div>
       </div>
     </section>
@@ -441,17 +444,18 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <!-- App scripts: data → charts → health-data → map → health → showcase → nlq → export → app (app wires everything last, per spec §3.1). Export.js is new in Phase 3. -->
+  <!-- App scripts: data → charts → health-data → map → health → showcase → nlq → export → pdf → app (app wires everything last, per spec §3.1). pdf.js is new in Phase 4 (the PDF report). -->
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="js/data.js?v=9"></script>
-  <script src="js/charts.js?v=9"></script>
-  <script src="js/health-data.js?v=9"></script>
-  <script src="js/map.js?v=9"></script>
-  <script src="js/health.js?v=9"></script>
-  <script src="js/showcase.js?v=9"></script>
-  <script src="js/nlq.js?v=9"></script>
-  <script src="js/export.js?v=9"></script>
-  <script src="js/app.js?v=9"></script>
+  <script src="js/data.js?v=10"></script>
+  <script src="js/charts.js?v=10"></script>
+  <script src="js/health-data.js?v=10"></script>
+  <script src="js/map.js?v=10"></script>
+  <script src="js/health.js?v=10"></script>
+  <script src="js/showcase.js?v=10"></script>
+  <script src="js/nlq.js?v=10"></script>
+  <script src="js/export.js?v=10"></script>
+  <script src="js/pdf.js?v=10"></script>
+  <script src="js/app.js?v=10"></script>
 </body>
 </html>
