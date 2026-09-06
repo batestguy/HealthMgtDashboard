@@ -39,12 +39,13 @@ Read this before starting any work; follow it for every feature, fix, and releas
    | Health tab controller (KPIs, badge, refresh) | `js/health.js` |
    | Recruiter showcase tab (radar, evidence, copy-email) | `js/showcase.js` |
    | NLQ engine (Ask tab) | `js/nlq.js` |
-   | PNG + share link (Export) | `js/export.js` (PNG snapshot + share link live; PDF deferred) |
-   | Bespoke Health trend legend | `renderHealthLegend()` in `js/charts.js` |
+   | PNG + share link + PDF (Export) | `js/export.js` (PNG snapshot + share link live) + `js/pdf.js` (multi-section PDF: jsPDF loaded from the CDN in `index.html` `<head>` library block at `jspdf@4.2.1`; charts embedded as JPEG snapshots from Chart.js instances; always green/gold on paper; filename `dashboard-report-YYYY-MM-DD.pdf`) |
+| Multi-section PDF report (Export) | `js/pdf.js` — wires the "Download PDF report" button; assumes jsPDF is already on the page from the CDN `<script>` (load order: jsPDF CDN → leaflet → local js/*.js → app.js); re-renders active-tab charts, embeds them as JPEG, always prints light "paper" theme regardless of active UI theme |   | Bespoke Health trend legend | `renderHealthLegend()` in `js/charts.js` |
    | All styles | `css/styles.css` |
    | Seeded workbook source | `tools/generate-sample-xlsx.js` |
+   | jsPDF (CDN) | `https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js?v=10` in the `<head>` library block (loaded before leaflet) |
 
-   Script order in `index.html`: leaflet → markercluster → data → charts → health-data → map → health → showcase → nlq → export → app (app wires everything last; `export.js` sits before `app.js`).
+   Script order in `index.html`: jsPDF CDN → leaflet → markercluster → data → charts → health-data → map → health → showcase → nlq → export → pdf → app (app wires everything last; `export.js` and `pdf.js` sit before `app.js`; jsPDF CDN is in the `<head>` library block, before leaflet).
 4. **Preview locally** — serve the folder over HTTP (no bundler, no dev server config):
 
    ```bash
@@ -102,9 +103,9 @@ Run through the full matrix — **iPhone (Safari), Android (Chrome), Desktop (Ch
 | 5 | NLQ ≥10 combos, fuzzy, multi-intent | Run the §6 Ask acceptance set; misspell a keyword ("showw", "lagis") |
 | 6 | Usable at 375×812 | All 5 tabs reachable via bottom bar; no horizontal scroll; 44px targets |
 | 7 | No console errors | Walk all 5 tabs + upload + export; console empty |
-| 8 (nice-to-have) | PNG/PDF export | Both files download and open |
+| 8 | PNG/PDF export | PNG downloads + opens; PDF downloads + opens (jsPDF from CDN; button shows "Building PDF report…" then "PDF downloaded — YYYY-MM-DD") |
 
-Check each box in spec §9 as it passes; log the sign-off date in §12.
+Check each box in spec §9 as it passes; log the sign-off date in §12. PDF export (row 8) is now a first-class acceptance item, not a nice-to-have — confirm the PDF button produces a multi-page, openable PDF with the right sections and numbers.
 
 ---
 
