@@ -139,7 +139,12 @@ window.PMCharts = (function () {
   // deep gold = malaria prevalence (down is good) — kept visually distinct
   // from the doughtnut ring and from each other.
   function healthTrendColors(i) {
-    return i === 0 ? token('green') : token('gold-deep');
+    // DPT3 immunization (series 0) = clear green; Malaria prevalence
+    // under-5 (series 1) = true warm gold. Use a brighter gold + a dark
+    // outline for the malaria dots so the two series are unmistakable in
+    // both themes (the lighter gold-deep alone can read as 'dark green-ish'
+    // on a dark background at legend-swatch size).
+    return i === 0 ? token('green') : token('gold-bright');
   }
 
   function doughnut(id, labels, values) {
@@ -206,9 +211,9 @@ window.PMCharts = (function () {
             backgroundColor: i === 0 ? grad : 'transparent',
             tension: 0.35,
             pointRadius: 3,
-            pointBackgroundColor: i === 0 ? token('gold') : token('card'),
-            pointBorderColor: token('card'),
-            pointBorderWidth: 1.5,
+            pointBackgroundColor: i === 0 ? token('gold') : token('gold-bright'),
+            pointBorderColor: i === 0 ? token('card') : token('ink'),
+            pointBorderWidth: i === 0 ? 1.5 : 1.25,
             borderWidth: 2.5,
             fill: i === 0 ? true : false
           };
