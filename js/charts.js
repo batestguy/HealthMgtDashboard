@@ -38,8 +38,11 @@ window.PMCharts = (function () {
   var ANIMATION = REDUCED ? false : { duration: 700, easing: 'easeOutQuart' };
 
   // Shared legend config (only where legends are shown).
-  function legend(display) {
-    return {
+  // Chart.js auto-swatches from dataset pointBackgroundColor; for multi-series
+  // charts we override per-dataset so the legend markers match the in-chart dots
+  // (Health trend chart is the canonical case).
+  function legend(display, datasetColors) {
+    var base = {
       position: 'bottom',
       display: display !== false,
       labels: {
@@ -51,6 +54,14 @@ window.PMCharts = (function () {
         font: { family: BODY_FONT, size: 11, weight: 500 }
       }
     };
+    if (datasetColors && datasetColors.length) {
+      base.labels.padding = 14;
+      base.overrideColors = true;
+      base.labels.color = function (ctx) {
+        return ctx.datasetIndex < datasetColors.length ? datasetColors[ctx.datasetIndex] : token('ink-soft');
+      };
+    }
+    return base;
   }
 
   // Brand-themed tooltip (gold rule accent via border + colored dot).
@@ -224,7 +235,7 @@ window.PMCharts = (function () {
         maintainAspectRatio: false,
         animation: ANIMATION,
         plugins: {
-          legend: legend(true),
+          legend: legend(true, [token('green'), token('gold-bright')]),
           tooltip: Object.assign(tooltipTheme(), {
             callbacks: {
               label: function (ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y; }
