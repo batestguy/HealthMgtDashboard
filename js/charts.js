@@ -41,7 +41,15 @@ window.PMCharts = (function () {
   // Chart.js auto-swatches from dataset pointBackgroundColor; for multi-series
   // charts we override per-dataset so the legend markers match the in-chart dots
   // (Health trend chart is the canonical case).
-  function legend(display, datasetColors) {
+  // Per-dataset legend marker color override for multi-series charts.
+  // Chart.js v4 may ignore a function pointBackgroundColor on the legend and
+  // fall back to the dataset's own pointBackgroundColor (which for DPT3 is gold,
+  // not green). So we accept a source key (line = 'borderColor', dot =
+  // 'pointBackgroundColor') and read the legend marker hue from that key per
+  // dataset. The Health trend chart passes 'borderColor' so the legend marker
+  // hue matches the line hue (DPT3 green, Malaria bright gold) even though the
+  // in-chart dots themselves are intentionally different.
+  function legend(display, datasetColors, sourceKey) {
     var base = {
       position: 'bottom',
       display: display !== false,
@@ -54,17 +62,16 @@ window.PMCharts = (function () {
         font: { family: BODY_FONT, size: 11, weight: 500 }
       }
     };
+    sourceKey = sourceKey || 'pointBackgroundColor';
     if (datasetColors && datasetColors.length) {
-      // Only override the *marker* color per dataset. In Chart.js v4, setting
-      // labels.color to a function can flip the legend into filled-swatch mode
-      // (both legend entries rendering as filled yellow-ish boxes), which is why
-      // the previous attempt made both markers look yellow. Keep the text color
-      // on the shared ink-soft and drive hue solely through pointBackgroundColor.
       base.plugins = base.plugins || {};
       base.plugins.legend = base.plugins.legend || {};
       base.plugins.legend.labels = base.plugins.legend.labels || {};
       base.plugins.legend.labels.pointBackgroundColor = function (ctx) {
-        return ctx.datasetIndex < datasetColors.length ? datasetColors[ctx.datasetIndex] : token('ink-soft');
+        var i = ctx.datasetIndex;
+        if (i >= datasetColors.length) return token('ink-soft');
+        var ds = ctx.chart.data.datasets[i];
+        return ds[sourceKey] || datasetColors[i];
       };
       base.plugins.legend.labels.padding = 14;
     }
@@ -242,7 +249,7 @@ window.PMCharts = (function () {
         maintainAspectRatio: false,
         animation: ANIMATION,
         plugins: {
-          legend: legend(true, [token('green'), token('gold-bright')]),
+          legend: legend(true, [token('green'), token('gold-bright')], 'borderColor'),
           tooltip: Object.assign(tooltipTheme(), {
             callbacks: {
               label: function (ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y; }
