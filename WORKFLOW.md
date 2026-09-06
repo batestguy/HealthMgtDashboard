@@ -39,11 +39,12 @@ Read this before starting any work; follow it for every feature, fix, and releas
    | Health tab controller (KPIs, badge, refresh) | `js/health.js` |
    | Recruiter showcase tab (radar, evidence, copy-email) | `js/showcase.js` |
    | NLQ engine (Ask tab) | `js/nlq.js` |
-   | PNG/PDF/share | `js/export.js` (pending) |
+   | PNG + share link (Export) | `js/export.js` (PNG snapshot + share link live; PDF deferred) |
+   | Bespoke Health trend legend | `renderHealthLegend()` in `js/charts.js` |
    | All styles | `css/styles.css` |
    | Seeded workbook source | `tools/generate-sample-xlsx.js` |
 
-   Script order in `index.html`: leaflet → markercluster → data → charts → health-data → map → health → showcase → nlq → app (app wires everything last). Add `export.js` before `app.js` when Export ships — keep `app.js` last.
+   Script order in `index.html`: leaflet → markercluster → data → charts → health-data → map → health → showcase → nlq → export → app (app wires everything last; `export.js` sits before `app.js`).
 4. **Preview locally** — serve the folder over HTTP (no bundler, no dev server config):
 
    ```bash
@@ -88,7 +89,7 @@ git push origin main        # Pages auto-builds from main — that IS the releas
 - After deploy: hard-refresh (Cache-busting shift) and re-run the affected §9 checks on the live URL — phones included.
 - Pages **404s until a root `index.html` exists** — until the first app shell is committed, the live URL is expected to be empty.
 
-### 3.3 v1 sign-off runbook (acceptance — spec §9)
+### 3.3 sign-off runbook (acceptance — spec §8 / redesign-spec §10)
 
 Run through the full matrix — **iPhone (Safari), Android (Chrome), Desktop (Chrome/Edge/Firefox)** — on the live URL:
 

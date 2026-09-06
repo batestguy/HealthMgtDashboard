@@ -186,9 +186,10 @@ All motion gated by `prefers-reduced-motion` (existing pattern extended):
 4. Desktop split layout (map 2/3 + indicators 1/3).
 
 ### Phase 3 — Ask + Export
-1. Ask: input/toggle restyle, answer panel typography (mono numerals in lists), chips.
-2. Export tab build (PNG/PDF) with the **new tokens** baked into the generated PDF theme (green/gold on paper) and PNG capture honoring the active theme.
-3. Final sweep: consistent dark mode everywhere, empty states, print stylesheet pass.
+1. **Ask tab — atlas shell restyle (engine untouched).** Section rule + atlas-styled input, Ask button, answer panel (3px gold rule, mono numerals in replies/lists), and atlas chip styling for the example chips; desktop split (input + answer left, example chips + "how it works" right at ≥900px, single-column on mobile). The NLQ engine (`js/nlq.js`) is unchanged — `parse`/`run` and the 17-check harness stay green; Phase 3 only restyles the shell around a finished engine.
+2. **Export tab — real first cut (PNG + share link now; PDF deferred).** PNG snapshot of the active tab via `html2canvas` (retina-scaled, themed to the active light/dark theme, filename `dashboard-YYYY-MM-DD.png`). Share link that copies the live Pages URL + active tab hash (clipboard API with `execCommand` fallback, toast feedback). PDF is intentionally deferred — the UI card says "coming next"; `jsPDF` is not wired in this phase.
+3. **Bespoke Health trend legend (lessons-learned implement).** Because Chart.js v4 on this build does not honor the per-dataset legend-marker color override for the DPT3 series, the trend chart disables its native legend and renders a small bespoke HTML legend (`renderHealthLegend` in `js/charts.js`) with two explicitly-painted dots — DPT3 = `token('green')`, Malaria = `token('gold-bright')` with a dark `--ink` outline — matching the in-chart dots and lines exactly. Other chart types keep the auto legend.
+4. Final sweep: consistent dark mode everywhere, empty states, print stylesheet pass.
 
 ---
 
@@ -223,13 +224,41 @@ Pick one in the follow-up; default if unopened: **Dandali**.
 5. All six chart types restyled (mono ticks, brand gradients, motif tooltips) and rebuild cleanly on theme switch — zero console errors.
 6. ≥900px: Projects + showcase go multi-column; 375×812 remains fully usable with 44px targets.
 7. Pattern identity visible in: header band, section dividers, hero, card watermark, tooltip accent — subtle, never noisy.
-8. Before/after screenshots at 375 + 1280 (light + dark) captured for sign-off; Brave eyeball by the user; `?v=` bumped; commit per phase.
+8. Before/after screenshots at 375 + 1280 (light + dark) captured for sign-off; Brave eyeball by the user; `?v=` bumped; commit per phase.## 9. Risks & open items
 
-## 9. Risks & open items
-
-1. **Name choice** (R12) — user pick from the shortlist or custom; header/subtitle/title text depends on it.
+1. **Name choice** (R12) — user pick from the shortlist or custom; header/subtitle/title text depends on it. (Default used: **Dandali**, shipped.)
 2. **Font weight/load budget** — 3 families may add ~150–250KB; mitigate with variable axes + limited weights + non-blocking load; verify <3s budget.
-3. **Map basemap** — OSM (safe) vs CARTO light/dark (cleaner, keyless) — decide in Phase 2 with the user.
-4. **Pattern final form** — chevron band vs Wawa Aba repetition; lock visually during Phase 1 rendering, keep both recipes in the module.
-5. **Dark-mode chart rebuild** — must not flash/reset user filters when toggling; implement destroyAll + re-render of the *active* tab only.
-6. **Export/PDF in dark mode** — PDFs always render in the light "paper" theme regardless of active UI theme (print = paper).
+3. **Map basemap** — OSM (safe) vs CARTO light/dark (cleaner, keyless) — locked to **OSM + atlas app-layer restyle** (decided with user during Phase 2; no API key).
+4. **Pattern final form** — chevron/wave band + Wawa Aba mark; locked visually during Phase 1 rendering.
+5. **Dark-mode chart rebuild** — implemented as destroyAll + re-render of the *active* tab only (applies to theme toggle; does not disturb filters).
+6. **Export/PDF in dark mode** — PDFs always render in the light "paper" theme regardless of active UI theme (print = paper). **PDF itself is still deferred** (PNG + share link shipped in Phase 3; `jsPDF` not yet wired).
+
+## 10. Already delivered — current state (as shipped)
+
+**All five tabs are built.** The redesign (Editorial National Atlas) shipped in three phases on top of the existing feature app; the feature app itself (Excel → dashboards, live facility map, Ask NLQ) was already complete before the redesign.
+
+**Shipped identity (design system — Phases 1–3):**
+- **Name:** Dandali (Hausa — "story/tale"). Header wordmark + Wawa Aba brand mark; `<title>` keeps the factual subtitle "Nigeria Health + PM Dashboard".
+- **Themes:** light "paper atlas" + dark "forest control room", switchable via a header toggle, persisted in `localStorage('pm-theme')`, set pre-paint to avoid flash. Tokens in `css/styles.css` (`:root` + `[data-theme="dark"]`).
+- **Type:** Fraunces (display) + Space Grotesk (body/UI) + IBM Plex Mono (data numerals, tabular-nums). Non-blocking Google Fonts load.
+- **Icons:** hand-drawn inline SVG sprite (`pm-*`) replacing all emoji in the chrome (tab bar, headers, buttons, chips, empty states).
+- **Pattern/motif:** woven chevron band under the header + as section dividers; hero texture; card watermarks; motif gold rule + dot on tooltips/empty states.
+- **Charts:** full bespoke theming from CSS tokens — mono ticks, Space Grotesk legends, hairline grids, brand gradients, motif-accented tooltips, draw-in animation; rebuilds on theme toggle.
+- **Motion:** KPI counters, chart draw-ins, panel transitions, micro-interactions — all gated by `prefers-reduced-motion`.
+- **Desktop:** true multi-column at ≥900px (Projects, showcase, Health split, Ask split); mobile stays single-column.
+
+**Tabs (all built):**
+1. **Projects** — Excel upload (multi-sheet via SheetJS), KPIs, filters, project cards, six charts, task tracker. Restyled in Phase 1.
+2. **Health** — GRID3 facility map (Nigeria-framed, zoom-8 detail, marker clusters, atlas-styled circles + Leaflet chrome + bespoke state-tooltip), HDX indicator trends + facility-level doughnut + key indicators; KPIs with mono numerals + footer summary; atlas section rules. Restyled in Phase 2.
+3. **🚀 This Project** — recruiter-facing showcase: hero art moment, evidence-based radar, feature→skill cards with Try-it deep links, toolchain chips, copy-email + GitHub CTAs. Default landing tab. Restyled in Phase 1.
+4. **💬 Ask** — simulated fuzzy multi-intent NLQ engine (typo-tolerant keyword matching over Excel data + health feed; answers with real numbers, filters Projects, opens tabs; 17-check parse harness green). Atlas shell restyle (input, answer panel, chips, desktop split) shipped in Phase 3; engine itself untouched.
+5. **📤 Export** — **PNG snapshot** (active-tab `html2canvas`, retina, themed to active theme, `dashboard-YYYY-MM-DD.png`) **+ share link** (live Pages URL + active tab hash, clipboard + `execCommand` fallback, toast) **now live**; **PDF deferred** (UI card says "coming next"; `jsPDF` not yet wired).
+
+**Known shipped lessons (see also §4.6):**
+- Multi-series chart colors must come from a scope-specific helper (`healthTrendColors`), not the global `PALETTE` via `colorFor(i)`.
+- When a series color must read in both themes, prefer a saturated hue-contrasted token (`--gold-bright`, with a dark outline on dots) over a single deeper gold that can read as dark-green-adjacent on dark.
+- Chart.js v4 on this build does not honor a per-dataset legend-marker color override for the DPT3 series (falls back to `pointBackgroundColor`); the trend chart therefore uses a bespoke HTML legend instead of fighting the native one.
+
+**Current build:** `?v=9` (9 js files + css/styles.css) on GitHub Pages → https://batestguy.github.io/HealthMgtDashboard/.
+
+**Still open (the one remaining functional item):** the multi-section PDF report (`jsPDF`) — deferred, UI card says "coming next".

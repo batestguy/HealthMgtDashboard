@@ -2,26 +2,31 @@
 
 ## What this project is
 
-A **Nigeria Health + Project Management Dashboard** (spec v1.1) — a multi-file static dashboard (HTML5 + CSS3 + vanilla JS, no build tools) hosted on GitHub Pages. **Live at https://batestguy.github.io/HealthMgtDashboard/ — Projects, Health, 🚀 showcase, and Ask are built; Export remains.**
+A **Nigeria Health + Project Management Dashboard** — a multi-file static dashboard (HTML5 + CSS3 + vanilla JS, no build tools) hosted on GitHub Pages. The app is built; the visual redesign ("Editorial National Atlas", branded **Dandali**) is fully shipped across all five tabs.
 
-- **Source of truth for WHAT:** `dashboard-spec.md` (decisions, per-tab requirements, acceptance criteria). `healtguide.txt` is the superseded v1.0 spec.
-- **Source of truth for HOW:** `WORKFLOW.md` (change loop, data regeneration, release, sign-off).
+**Live at https://batestguy.github.io/HealthMgtDashboard/ — all five tabs built:** Projects, Health, 🚀 This Project (showcase, default landing), 💬 Ask (NLQ), and 📤 Export (PNG + share link now; PDF deferred).
+
+- **Source of truth for WHAT:** `dashboard-spec.md` (decisions, per-tab requirements, acceptance criteria). The visual redesign is specified in `redesign-spec.md` (design system + phase plan + lessons-learned); the recruiter-facing showcase is specified in `showcase-spec.md`. `healtguide.txt` is the superseded v1.0 spec and should not be read for current requirements.
+- **Source of truth for HOW:** `WORKFLOW.md` (spec-first change loop, data regeneration, release to Pages, sign-off).
+- **Identity:** "Editorial National Atlas" — warm paper + deep green ink + refined gold, Fraunces display + Space Grotesk body + IBM Plex Mono numerals, hand-drawn inline SVG icons (no emoji in chrome), Wawa Aba brand mark + woven pattern bands, light + dark themes with a persisted header toggle. Head wordmark: **Dandali**.
 - **Feature set (5 tabs, fixed bottom tab bar):**
-  1. 📋 **Projects** – Excel upload (multi-sheet via SheetJS), project/task KPIs, task tracker, bar chart, risk summary.
-  2. 🏥 **Health** – GRID3 facility map (~51k facilities, Leaflet + marker clusters), HDX indicator trends (1h cache), facility-type doughnut, refresh button.
-  3. 🚀 **This Project** – recruiter-facing showcase (showcase-spec.md): hero + evidence-based radar, feature→skill cards with Try-it deep links, toolchain chips, copy-email + GitHub CTAs. Default landing tab. (Replaced the retired Quiz.)
-  4. 💬 **Ask (NLQ)** – simulated fuzzy multi-intent engine ("show top 3 tasks in lagos"): typo-tolerant keyword matching over Excel data + health feed; answers with real numbers, filters Projects, opens tabs. 17-check parse harness green.
-  5. 📤 **Export** – PNG via html2canvas, PDF via jsPDF, share link.
+  1. 📋 **Projects** – Excel upload (multi-sheet via SheetJS), project/task KPIs, filters, project cards, six charts, task tracker. Atlas-styled in Phase 1.
+  2. 🏥 **Health** – GRID3 facility map (~51k facilities, Leaflet + marker clusters, Nigeria-framed, zoom-8 detail, atlas-styled circles + controls + bespoke state tooltip), HDX indicator trends + facility-level doughnut + key indicators; KPIs with mono numerals + footer summary; atlas section rules. Restyled in Phase 2. Map trend legend is a bespoke HTML legend (green DPT3 dot + bright-gold Malaria dot with dark outline).
+  3. 🚀 **This Project** – recruiter-facing showcase: hero art moment, evidence-based radar, feature→skill cards with Try-it deep links, toolchain chips, copy-email + GitHub CTAs. Default landing tab. Restyled in Phase 1.
+  4. 💬 **Ask (NLQ)** – simulated fuzzy multi-intent engine ("show top 3 tasks in lagos"): typo-tolerant keyword matching over Excel data + health feed; answers with real numbers, filters Projects, opens tabs. 17-check parse harness green. Atlas shell restyle (input, answer panel, chips, desktop split) shipped in Phase 3; the engine itself is untouched.
+  5. 📤 **Export** – **PNG snapshot** of the active tab (html2canvas, retina-scaled, themed to the active light/dark theme, `dashboard-YYYY-MM-DD.png`) **+ share link** (live Pages URL + active tab hash, clipboard API + `execCommand` fallback, toast) now live; **PDF deferred** (UI card says "coming next"; `jsPDF` not yet wired).
 
 ## Key locations
 
-- `dashboard-spec.md` – the spec (decisions, data architecture, theming, deployment, acceptance criteria, §12 already-done log).
-- `WORKFLOW.md` – the process: spec-first change loop, workbook regeneration, release to Pages, v1 sign-off runbook.
+- `dashboard-spec.md` – the feature/architecture spec (decisions, data architecture, theming, deployment, acceptance criteria, §12 already-done log).
+- `redesign-spec.md` – the visual redesign spec (design system tokens, type, icons, pattern, layout, chart theming, motion, phased plan, lessons-learned, §10 current-state status).
+- `showcase-spec.md` – the recruiter-facing showcase spec (the 🚀 This Project tab).
+- `WORKFLOW.md` – the process: spec-first change loop, workbook regeneration, release to Pages, sign-off.
 - `assets/sample-data.xlsx` – seeded demo workbook (generated, never hand-edited).
 - `tools/generate-sample-xlsx.js` – dev-only generator for the workbook.
-- `.agents/types/` – internal Codebuff agent tooling; **not part of the project**, ignore for feature work.
-- Shipped app files (spec §3.1): `index.html` (5-tab shell), `css/styles.css`, `js/app.js` (tabs + Projects tab), `js/data.js` (Excel parse/validate), `js/charts.js` (bar/doughnut/line + radar), `js/health-data.js` (GRID3 + HDX + seeds + per-state counts), `js/map.js` (Leaflet, Nigeria-framed), `js/health.js` (Health tab), `js/showcase.js` (showcase tab), `js/nlq.js` (Ask NLQ engine). `js/export.js` is pending. Local assets are cache-busted with `?v=` in `index.html` — bump on every app change (GitHub Pages caches ~10 min).
-- Tabs are deep-linkable: `#projects`, `#health`, …
+- `.agents/types/` – internal Freebuff/Codebuff agent tooling; **not part of the project**, ignore for feature work.
+- Shipped app files (spec §3.1): `index.html` (5-tab shell), `css/styles.css`, `js/app.js` (tabs + Projects tab + shared helpers + theme wiring), `js/data.js` (Excel parse/validate), `js/charts.js` (bar/doughnut/line/radar + bespoke Health trend legend helper), `js/health-data.js` (GRID3 + HDX + seeds + per-state counts), `js/map.js` (Leaflet, Nigeria-framed), `js/health.js` (Health tab), `js/showcase.js` (showcase tab), `js/nlq.js` (Ask NLQ engine), `js/export.js` (PNG + share link). Local assets are cache-busted with `?v=` in `index.html` — current build `?v=9`; bump on every app change (GitHub Pages caches ~10 min).
+- Tabs are deep-linkable: `#projects`, `#health`, `#showcase`, `#ask`, `#export`.
 
 ## Commands
 
@@ -32,9 +37,10 @@ A **Nigeria Health + Project Management Dashboard** (spec v1.1) — a multi-file
 
 ## Conventions & gotchas
 
-- **Mobile-first:** single column, max-width 480px, centred; must be fully usable at 375×812; minimum 44px touch targets.
-- **Theme:** primary `#008751` (Nigerian green), secondary `#f5b041` (gold), bg `#f0f4f8`, text `#1a202c`, white cards with 16px radius, gradient header, system font stack.
+- **Mobile-first:** single column, max-width 480px, centred; fully usable at 375×812; minimum 44px touch targets.
+- **Theme tokens (shipped):** paper atlas light (`--bg #f6f1e7`, `--ink #12352a`, `--green #0e6b4c`, `--gold #c99a2e`) and forest control room dark (`--bg #0e1a15`, `--ink #e9efe9`, `--green #2eae7d`, `--gold #e8b64c`); plus `--gold-bright` (#e9b94a light / #f3c45a dark) used for the Malaria trend series. See `redesign-spec.md §4.1`.
+- **Icons:** hand-drawn inline SVG sprite (`pm-*`), `stroke="currentColor"`, replaces all emoji in the chrome. Emoji is **not** the icon system.
 - **Data:** synthetic but realistic Excel data (5 sheets: Projects, Tasks, Resources, Finances, Locations — projects keyed by `ProjectID`). Health APIs need **fallback sample data** so the demo never breaks.
 - **NLQ is simulated**, not a real LLM — keyword → action mapping only.
-- **No external icon library** – use emoji/Unicode.
-- Acceptance criteria (section 13 of spec) are the definition of done; verify charts render without console errors and export works.
+- **Zero build step** stays true: Google Fonts (non-blocking), inline SVG/CSS, CDN-only libraries. No bundler, no npm to the browser.
+- Acceptance criteria are the definition of done; verify charts render without console errors and export works.
