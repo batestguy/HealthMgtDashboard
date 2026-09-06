@@ -140,15 +140,16 @@ A small library of CSS/SVG pattern recipes (all inline — no assets, no build):
 
 ### 4.6 Chart theming (full bespoke, `js/charts.js`)
 
-Central `THEME` object read from computed CSS tokens at draw time (so light/dark works without rebuilding charts — rebuild on theme switch):
+Central token read at draw time from computed CSS variables (so light/dark works without rebuilding charts — rebuild on theme switch):
 - Fonts: ticks + tooltips in mono (tabular), legends in Space Grotesk.
 - Grids: only `y` gridlines, hairline `--paper-line`, no x-grid, no chart border.
 - Bars: gradient fill (green → transparent or green → gold for the last bar), radius 4–6, `maxBarThickness` kept.
-- Lines: 2.5px strokes, subtle gradient fill under the line (top 12% opacity), dots in gold.
+- Lines: 2.5px strokes, subtle gradient fill under the line (top ~20% opacity), dots in gold for the first series only.
 - Doughnut: brand palette ring, 4px gaps (borderWidth), center label optional.
 - Tooltips: custom HTML — paper/dark card, mono numerals, motif gold rule + dot accent, Space Grotesk labels.
 - Animation: draw-in per dataset (Chart.js `animation` config), 600–800ms ease-out; disabled under `prefers-reduced-motion`.
-- Radar (showcase): green fill 12%, gold points, mono ticks.
+- Radar (showcase): green fill ~16% alpha, gold points, mono ticks.
+- **Series color rule (lessons-learned, commited 2026-09-06):** do **not** color line/poly series from the global `PALETTE` via a single `colorFor(i)` index when a chart can have more than one series — the same palette slot can collide across series in some renderings. Scope-specific color helpers (e.g. `healthTrendColors(i)` in `js/charts.js`) must be used for multi-series charts, and the per-point fill should also be series-differentiated (gold node on series 0, paper node on series 1) so the legend, the line, and the dots agree. The Health indicator trend chart is the canonical case: DPT3 immunization (green, up-is-good) vs Malaria prevalence under-5 (deep gold, down-is-good).
 
 ### 4.7 Motion system
 
