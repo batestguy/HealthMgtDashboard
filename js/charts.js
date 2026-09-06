@@ -78,6 +78,50 @@ window.PMCharts = (function () {
     return base;
   }
 
+  // Health trend chart gets a bespoke HTML legend (two dots painted exactly
+  // green and bright-gold with a dark outline on the malaria one) because Chart.js
+  // v4 on this build does not honor the per-dataset legend-marker override for the
+  // DPT3 series and falls back to the dataset pointBackgroundColor (gold). The
+  // helper itself is left generic and unused by the other chart types.
+  function renderHealthLegend(canvasId, colors, labels) {
+    var host = document.getElementById(canvasId);
+    if (!host) return;
+    var wrap = host.parentNode;
+    if (!wrap) return;
+    // Remove any previous bespoke legend we may have appended.
+    var prev = wrap.querySelector('.' + HEALTH_LEGEND_CLASS);
+    if (prev) prev.remove();
+    var row = document.createElement('div');
+    row.className = HEALTH_LEGEND_CLASS;
+    var items = [
+      { color: colors[0], stroke: null },
+      { color: colors[1], stroke: token('ink') }
+    ];
+    items.forEach(function (it, i) {
+      var item = document.createElement('div');
+      item.className = 'hl-item';
+      var dot = document.createElement('span');
+      dot.className = 'hl-dot';
+      dot.style.background = it.color;
+      dot.style.display = 'inline-block';
+      dot.style.width = '9px';
+      dot.style.height = '9px';
+      dot.style.borderRadius = '50%';
+      if (it.stroke) {
+        dot.style.outline = '1.5px solid ' + it.stroke;
+        dot.style.outlineOffset = '1px';
+      }
+      var txt = document.createElement('span');
+      txt.className = 'hl-label';
+      txt.textContent = labels[i];
+      item.appendChild(dot);
+      item.appendChild(txt);
+      row.appendChild(item);
+    });
+    wrap.appendChild(row);
+  }
+  var HEALTH_LEGEND_CLASS = 'hl-legend';
+
   // Brand-themed tooltip (gold rule accent via border + colored dot).
   function tooltipTheme() {
     return {
@@ -249,7 +293,7 @@ window.PMCharts = (function () {
         maintainAspectRatio: false,
         animation: ANIMATION,
         plugins: {
-          legend: legend(true, [token('green'), token('gold-bright')], 'borderColor'),
+          legend: { display: false },
           tooltip: Object.assign(tooltipTheme(), {
             callbacks: {
               label: function (ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y; }
@@ -262,6 +306,7 @@ window.PMCharts = (function () {
         })
       }
     });
+    renderHealthLegend(id, [token('green'), token('gold-bright')], series.map(function (s) { return s.label; }));
     return registry[id];
   }
 
