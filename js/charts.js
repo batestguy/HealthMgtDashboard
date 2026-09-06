@@ -55,11 +55,18 @@ window.PMCharts = (function () {
       }
     };
     if (datasetColors && datasetColors.length) {
-      base.labels.padding = 14;
-      base.overrideColors = true;
-      base.labels.color = function (ctx) {
+      // Only override the *marker* color per dataset. In Chart.js v4, setting
+      // labels.color to a function can flip the legend into filled-swatch mode
+      // (both legend entries rendering as filled yellow-ish boxes), which is why
+      // the previous attempt made both markers look yellow. Keep the text color
+      // on the shared ink-soft and drive hue solely through pointBackgroundColor.
+      base.plugins = base.plugins || {};
+      base.plugins.legend = base.plugins.legend || {};
+      base.plugins.legend.labels = base.plugins.legend.labels || {};
+      base.plugins.legend.labels.pointBackgroundColor = function (ctx) {
         return ctx.datasetIndex < datasetColors.length ? datasetColors[ctx.datasetIndex] : token('ink-soft');
       };
+      base.plugins.legend.labels.padding = 14;
     }
     return base;
   }
