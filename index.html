@@ -21,7 +21,7 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"></noscript>
   <!-- NOTE: bump the ?v= on every local css/js link when app files change —
        GitHub Pages caches assets, so a fresh value forces browsers to refetch. -->
-  <link rel="stylesheet" href="css/styles.css?v=7">
+  <link rel="stylesheet" href="css/styles.css?v=8">
   <!-- Runtime libraries (CDN only — no build step, per spec §3.2) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -203,32 +203,40 @@
       </div>
 
       <div class="kpi-grid" aria-label="Health KPIs">
-        <div class="card kpi-card"><span class="kpi-value" id="kpi-facilities">–</span><span class="kpi-label">Facilities</span></div>
+        <div class="card kpi-card"><span class="kpi-value" id="kpi-facilities">–</span><span class="kpi-label">Facilities</span><span class="kpi-context" id="kpi-facilities-ctx"></span></div>
         <div class="card kpi-card"><span class="kpi-value" id="kpi-states">–</span><span class="kpi-label">States covered</span></div>
         <div class="card kpi-card"><span class="kpi-value" id="kpi-public">–</span><span class="kpi-label">Public</span></div>
         <div class="card kpi-card"><span class="kpi-value" id="kpi-private">–</span><span class="kpi-label">Private</span></div>
       </div>
 
-      <div class="card">
-        <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-map"></use></svg>Facility Map</h2>
-        <div id="health-map" class="health-map" aria-label="Map of Nigerian health facilities"></div>
-        <p class="map-hint">Circles = facilities per state (GRID3). Zoom in (level 8+) to load individual facility points.</p>
+      <div class="section-rule"><span>Section — Nigeria Health Map</span></div>
+      <div class="health-split">
+        <div class="card">
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-map"></use></svg>Facility Map</h2>
+          <div id="health-map" class="health-map" aria-label="Map of Nigerian health facilities"></div>
+          <p class="map-hint">Circles = facilities per state (GRID3). Zoom in (level 8+) to load individual facility points.</p>
+          <p id="map-empty" class="map-empty" hidden>No facility data loaded yet. Upload a project file or load the sample data on the Projects tab.</p>
+        </div>
+        <div class="card">
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-gauge"></use></svg>Key Indicators</h2>
+          <p class="map-hint">Tap a checkbox to show or hide an indicator for this session.</p>
+          <ul id="key-indicator-list" class="indicator-list"></ul>
+          <p id="indicators-empty" class="list-empty" hidden>No indicators available for this session.</p>
+        </div>
       </div>
 
       <div class="card">
+        <div class="section-rule"><span>Section — Facility profile</span></div>
         <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-health"></use></svg>Facilities by Level</h2>
         <div class="chart-wrap"><canvas id="chart-facility-types" aria-label="Doughnut chart of facility levels"></canvas></div>
+        <p id="facility-types-empty" class="chart-empty" hidden>No facility-level data for this session.</p>
       </div>
 
       <div class="card">
+        <div class="section-rule"><span>Section — Indicators over time</span></div>
         <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-trend"></use></svg>Indicator Trends</h2>
         <div class="chart-wrap chart-wrap-tall"><canvas id="chart-indicator-trends" aria-label="Line chart of health indicator trends"></canvas></div>
-      </div>
-
-      <div class="card">
-        <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-gauge"></use></svg>Key Indicators</h2>
-        <p class="map-hint">Tap a checkbox to show or hide an indicator for this session.</p>
-        <ul id="key-indicator-list" class="indicator-list"></ul>
+        <p id="trends-empty" class="chart-empty" hidden>No indicator trends for this session.</p>
       </div>
 
       <p class="credit">Facilities: GRID3 NGA Health Facilities v2.0 (CC BY 4.0) · Indicators: HDX / WHO — Nigeria Health Indicators</p>
@@ -406,13 +414,13 @@
   <!-- App scripts: data → charts → health-data → map → health → app (app wires everything, per spec §3.1) -->
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="js/data.js?v=7"></script>
-  <script src="js/charts.js?v=7"></script>
-  <script src="js/health-data.js?v=7"></script>
-  <script src="js/map.js?v=7"></script>
-  <script src="js/health.js?v=7"></script>
-  <script src="js/showcase.js?v=7"></script>
-  <script src="js/nlq.js?v=7"></script>
-  <script src="js/app.js?v=7"></script>
+  <script src="js/data.js?v=8"></script>
+  <script src="js/charts.js?v=8"></script>
+  <script src="js/health-data.js?v=8"></script>
+  <script src="js/map.js?v=8"></script>
+  <script src="js/health.js?v=8"></script>
+  <script src="js/showcase.js?v=8"></script>
+  <script src="js/nlq.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>

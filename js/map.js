@@ -78,14 +78,20 @@ window.PMMap = (function () {
       // Keep aggregate circles compact: sqrt scale with a small coefficient
       // and a low cap, so big states (thousands of facilities) never blob out.
       var radius = 3 + Math.sqrt(g.count) * 0.15;
+      var ms = tryTokens();
       var marker = L.circleMarker([c[0], c[1]], {
         radius: Math.min(radius, 18),
-        color: '#ffffff',
+        color: ms.ink,
         weight: 1,
-        fillColor: '#008751',
-        fillOpacity: 0.5
+        fillColor: ms.green,
+        fillOpacity: 0.55
       });
-      marker.bindTooltip(g.key + ': ' + g.count.toLocaleString() + ' facilities', { direction: 'top' });
+      marker.bindTooltip(
+        '<span class="mt-state">' + escapeHtml(g.key) + '</span>' +
+        '<span class="mt-count">' + g.count.toLocaleString() + '</span>' +
+        '<span class="mt-unit">facilities</span>',
+        { className: 'atlas-tooltip', direction: 'top', offset: [0, 6] }
+      );
       marker.on('click', function () {
         map.flyTo([c[0], c[1]], 9, { duration: 1.2 });
       });
@@ -106,6 +112,21 @@ window.PMMap = (function () {
       );
       clusterLayer.addLayer(m);
     });
+  }
+
+  // Read the theme tokens once per render so the circles follow light/dark
+  // (and any future palette change) without rebuilding the map.
+  function tryTokens() {
+    var ink = '';
+    var green = '';
+    try {
+      ink = (getComputedStyle(document.documentElement).getPropertyValue('--ink') || '').trim();
+      green = (getComputedStyle(document.documentElement).getPropertyValue('--green') || '').trim();
+    } catch (e) { /* offline fallback — keep the old hard-coded look */ }
+    return {
+      ink: ink || '#ffffff',
+      green: green || '#008751'
+    };
   }
 
   function isSampleSource() {

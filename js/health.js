@@ -27,6 +27,9 @@ window.PMHealth = (function () {
     $('btn-health-refresh').addEventListener('click', function () {
       if (loading) return;
       PMHealthData.resetSession();
+      // Reload the cached aggregates so the KPI cards re-count up on the
+      // next render (counters fire from renderKpis); keep the map's current
+      // pan/zoom — renderAggregates replaces only the circle layer.
       loadAll('Refreshed');
     });
 
@@ -79,29 +82,86 @@ window.PMHealth = (function () {
     }
   }
 
+  function fmtNaira(n) {
+    if (n === null || n === undefined || isNaN(n)) return '\u20A6' + '0';
+    if (n >= 1e9) return '\u20A6' + trimZero((n / 1e9).toFixed(1)) + 'B';
+    if (n >= 1e6) return '\u20A6' + trimZero((n / 1e6).toFixed(1)) + 'M';
+    if (n >= 1e3) return '\u20A6' + trimZero((n / 1e3).toFixed(1)) + 'k';
+    return '\u20A6' + Math.round(n).toLocaleString();
+  }
+  function trimZero(s) { return s.replace(/\.0$/, ''); }
+
   function renderKpis(agg) {
-    var up = window.PMApp && PMApp.countUp ? PMApp.countUp : function (el, v, fmt) { el.textContent = fmt ? fmt(v) : String(v); };
+    var up = window.PMApp && PMApp.countUp ? PMApp.countUp : function (el, v, fmt) {
+      el.textContent = fmt ? fmt(v) : String(v);
+    };
     up($('kpi-facilities'), agg.total, function (v) { return v.toLocaleString(); });
-    up($('kpi-states'), agg.statesCovered, function (v) { return String(v); });
+    $('kpi-states').textContent = agg.statesCovered.toLocaleString();
     up($('kpi-public'), agg.ownership.Public || 0, function (v) { return v.toLocaleString(); });
     up($('kpi-private'), agg.ownership.Private || 0, function (v) { return v.toLocaleString(); });
+    // Second-row footer KPI renders after count-up settles so it never
+    // reads a mid-tween value (redesign-spec §4.7 #1).
+    if (window.PMApp && PMApp.countUp) {
+      setTimeout(function () {
+        $('kpi-facilities-ctx').textContent = measurementsFriendly(agg);
+      }, 700);
+    } else {
+      $('kpi-facilities-ctx').textContent = measurementsFriendly(agg);
+    }
+  }
+
+  function measurementsFriendly(agg) {
+    var parts = [];
+    if (agg.total) parts.push(formatMetric(agg.total) + ' facilities');
+    if (agg.statesCovered) parts.push(agg.statesCovered + ' states');
+    if (agg.ownership && agg.ownership.Public) {
+      parts.push(formatMetric(agg.ownership.Public) + ' public');
+    }
+    if (agg.ownership && agg.ownership.Private) {
+      parts.push(formatMetric(agg.ownership.Private) + ' private');
+    }
+    return parts.join(' \u00B7 ') || '';
+  }
+
+  function formatMetric(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(0) + 'k';
+    return String(n);
   }
 
   function renderTypeChart(agg) {
     var labels = agg.levels.map(function (l) { return l.key; });
     var values = agg.levels.map(function (l) { return l.count; });
-    if (!labels.length) { PMCharts.destroy('chart-facility-types'); return; }
+    var empty = $('facility-types-empty');
+    if (!labels.length) {
+      PMCharts.destroy('chart-facility-types');
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
     PMCharts.doughnut('chart-facility-types', labels, values);
   }
 
   function renderTrendChart(ind) {
-    if (!ind.series.length) { PMCharts.destroy('chart-indicator-trends'); return; }
+    var empty = $('trends-empty');
+    if (!ind || !ind.series.length) {
+      PMCharts.destroy('chart-indicator-trends');
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
     PMCharts.line('chart-indicator-trends', ind.years, ind.series);
   }
 
   function renderKeyIndicators(items) {
     var list = $('key-indicator-list');
+    var empty = $('indicators-empty');
     list.textContent = '';
+    if (!items || !items.length) {
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
     items.forEach(function (item) {
       var li = document.createElement('li');
       li.className = 'indicator-row';
@@ -111,12 +171,14 @@ window.PMHealth = (function () {
       cb.type = 'checkbox';
       cb.checked = true;
       cb.setAttribute('aria-label', 'Show ' + item.label);
+      cb.setAttribute('id', 'ind-cb-' + item.id);
       cb.addEventListener('change', function () {
         li.hidden = !cb.checked;
       });
 
-      var label = document.createElement('span');
+      var label = document.createElement('label');
       label.className = 'indicator-label';
+      label.setAttribute('for', 'ind-cb-' + item.id);
       label.textContent = item.label;
 
       var value = document.createElement('span');
@@ -131,15 +193,16 @@ window.PMHealth = (function () {
   }
 
   // Re-render the visible charts/KPIs from cached data (no network) — used
-  // after a theme toggle so charts pick up the new tokens (redesign-spec §4.6).
+  // after a theme toggle so charts pick up the new CSS tokens (redesign-spec
+  // §4.6) and after a refresh so the KPI values re-count up.
   function repaint() {
     var agg = PMHealthData.currentAggregates();
     var ind = PMHealthData.currentIndicators();
-    if (!agg || !ind) return;
+    if (!agg) return;
     renderKpis(agg);
     renderTypeChart(agg);
-    renderTrendChart(ind);
-    renderKeyIndicators(ind.keyIndicators);
+    if (ind) renderTrendChart(ind);
+    if (ind) renderKeyIndicators(ind.keyIndicators);
   }
 
   return { init: init, repaint: repaint };
