@@ -72,13 +72,19 @@ window.PMHealth = (function () {
     line.textContent = parts.join(' • ');
     var anySample = facSource !== 'live' || indSource !== 'live';
     badge.hidden = !anySample;
+    // Reflect the same state in the header chip (redesign-spec §4.5).
+    var anyLive = facSource === 'live' || indSource === 'live';
+    if (window.PMApp && PMApp.setLiveStatus) {
+      PMApp.setLiveStatus(anyLive, anyLive ? 'Live data' : 'Sample data');
+    }
   }
 
   function renderKpis(agg) {
-    $('kpi-facilities').textContent = agg.total.toLocaleString();
-    $('kpi-states').textContent = String(agg.statesCovered);
-    $('kpi-public').textContent = (agg.ownership.Public || 0).toLocaleString();
-    $('kpi-private').textContent = (agg.ownership.Private || 0).toLocaleString();
+    var up = window.PMApp && PMApp.countUp ? PMApp.countUp : function (el, v, fmt) { el.textContent = fmt ? fmt(v) : String(v); };
+    up($('kpi-facilities'), agg.total, function (v) { return v.toLocaleString(); });
+    up($('kpi-states'), agg.statesCovered, function (v) { return String(v); });
+    up($('kpi-public'), agg.ownership.Public || 0, function (v) { return v.toLocaleString(); });
+    up($('kpi-private'), agg.ownership.Private || 0, function (v) { return v.toLocaleString(); });
   }
 
   function renderTypeChart(agg) {
@@ -124,5 +130,17 @@ window.PMHealth = (function () {
     });
   }
 
-  return { init: init };
+  // Re-render the visible charts/KPIs from cached data (no network) — used
+  // after a theme toggle so charts pick up the new tokens (redesign-spec §4.6).
+  function repaint() {
+    var agg = PMHealthData.currentAggregates();
+    var ind = PMHealthData.currentIndicators();
+    if (!agg || !ind) return;
+    renderKpis(agg);
+    renderTypeChart(agg);
+    renderTrendChart(ind);
+    renderKeyIndicators(ind.keyIndicators);
+  }
+
+  return { init: init, repaint: repaint };
 })();

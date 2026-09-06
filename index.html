@@ -3,15 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Nigeria Health + PM Dashboard</title>
+  <title>Dandali — Nigeria Health + PM Dashboard</title>
+  <meta name="theme-color" content="#0a4d36">
+  <!-- Pre-paint theme: avoid a light/dark flash (single localStorage exception, spec decision #16) -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('pm-theme');
+        if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { /* storage unavailable — stay light */ }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Non-blocking: page paints with fallback typeface, Fraunces swaps in when ready -->
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet"></noscript>
+  <!-- Non-blocking: page paints with fallback faces; Fraunces + Space Grotesk + IBM Plex Mono swap in when ready -->
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"></noscript>
   <!-- NOTE: bump the ?v= on every local css/js link when app files change —
        GitHub Pages caches assets, so a fresh value forces browsers to refetch. -->
-  <link rel="stylesheet" href="css/styles.css?v=6">
+  <link rel="stylesheet" href="css/styles.css?v=7">
   <!-- Runtime libraries (CDN only — no build step, per spec §3.2) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -20,17 +30,58 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 </head>
 <body>
+  <!-- Hand-drawn inline SVG icon set (redesign-spec §4.3) — no icon library, no build step -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="pm-mark" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M7.5 12h9"/><path d="M4 4.5l1.8 1.2M20 4.5l-1.8 1.2M4 19.5l1.8-1.2M20 19.5l-1.8-1.2"/></symbol>
+    <symbol id="pm-projects" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></symbol>
+    <symbol id="pm-health" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></symbol>
+    <symbol id="pm-showcase" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18.5 16.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+    <symbol id="pm-ask" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></symbol>
+    <symbol id="pm-export" viewBox="0 0 24 24"><path d="M12 4v9M8.5 9.5L12 13l3.5-3.5"/><path d="M5 14.5V17A2.5 2.5 0 0 0 7.5 19.5h9A2.5 2.5 0 0 0 19 17v-2.5"/></symbol>
+    <symbol id="pm-upload" viewBox="0 0 24 24"><path d="M12 15V6M8.5 9.5L12 6l3.5 3.5"/><path d="M5 14.5V17A2.5 2.5 0 0 0 7.5 19.5h9A2.5 2.5 0 0 0 19 17v-2.5"/></symbol>
+    <symbol id="pm-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+    <symbol id="pm-finance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10.5 8.5v7M13.5 8.5v7M10.8 9.3l2.4 5.4M13.2 9.3l-2.4 5.4"/></symbol>
+    <symbol id="pm-task" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></symbol>
+    <symbol id="pm-resource" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 5.5v2M12 16.5v2M5.5 12h2M16.5 12h2M7.6 7.6l1.4 1.4M15 15l1.4 1.4M16.4 7.6L15 9M9 15l-1.4 1.4"/></symbol>
+    <symbol id="pm-map" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.1-6.5-10a6.5 6.5 0 0 1 13 0c0 4.9-6.5 10-6.5 10z"/><circle cx="12" cy="10.5" r="2.3"/></symbol>
+    <symbol id="pm-trend" viewBox="0 0 24 24"><path d="M4 16.5l5-5 3.5 3.5L20 7.5"/><path d="M15.5 7.5H20V12"/></symbol>
+    <symbol id="pm-gauge" viewBox="0 0 24 24"><path d="M4.5 15.5a8.5 8.5 0 1 1 15 0"/><path d="M12 15.5l4-5"/></symbol>
+    <symbol id="pm-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2.5"/><path d="M5.5 15.5A2.5 2.5 0 0 1 3 13V6.5A2.5 2.5 0 0 1 5.5 4H12a2.5 2.5 0 0 1 2.5 2.5"/></symbol>
+    <symbol id="pm-code" viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/></symbol>
+    <symbol id="pm-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 3.5V6.5H16.5"/></symbol>
+    <symbol id="pm-mail" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4.5 7.5l7.5 5.5 7.5-5.5"/></symbol>
+    <symbol id="pm-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></symbol>
+    <symbol id="pm-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol>
+    <symbol id="pm-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+  </svg>
+
   <header class="app-header">
-    <h1>🇳🇬 Nigeria Health + PM Dashboard</h1>
+    <div class="app-header-inner">
+      <a class="brand" href="#showcase" aria-label="Dandali — Nigeria Health + PM Dashboard home">
+        <svg class="brand-mark" aria-hidden="true"><use href="#pm-mark"></use></svg>
+        <span>
+          <span class="brand-name">Dandali</span>
+          <span class="brand-sub">Nigeria Health + PM</span>
+        </span>
+      </a>
+      <div class="header-tools">
+        <span id="live-status" class="live-chip" hidden><span class="dot"></span><span id="live-status-text">Live</span></span>
+        <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg aria-hidden="true"><use id="theme-toggle-icon" href="#pm-moon"></use></svg>
+        </button>
+      </div>
+    </div>
+    <div class="woven-band" aria-hidden="true"></div>
   </header>
 
   <main class="app-main">
     <!-- ============ Tab 1: Projects ============ -->
     <section id="tab-projects" class="tab-panel active" aria-label="Projects">
       <div class="card card-toolbar reveal-1">
-        <h2>📋 Excel Data</h2>
+        <div class="card-head"><h2><svg class="card-icon" aria-hidden="true"><use href="#pm-upload"></use></svg>Excel Data</h2></div>
         <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Upload Excel file">
-          <p class="drop-hint">📥 Tap or drag a <strong>.xlsx / .xls</strong> file here</p>
+          <svg class="pm-icon" aria-hidden="true"><use href="#pm-upload"></use></svg>
+          <p class="drop-hint">Tap or drag a <strong>.xlsx / .xls</strong> file here</p>
           <input id="file-input" type="file" accept=".xlsx,.xls" hidden>
         </div>
         <div class="btn-row">
@@ -42,25 +93,25 @@
 
       <div class="kpi-grid reveal-1" aria-label="Project KPIs">
         <div class="card kpi-card accent-green">
-          <span class="kpi-chip">📋</span>
+          <span class="kpi-chip"><svg aria-hidden="true"><use href="#pm-projects"></use></svg></span>
           <span class="kpi-value" id="kpi-projects">–</span>
           <span class="kpi-label">Projects</span>
           <span class="kpi-context" id="kpi-projects-ctx"></span>
         </div>
         <div class="card kpi-card accent-gold">
-          <span class="kpi-chip">✅</span>
+          <span class="kpi-chip"><svg aria-hidden="true"><use href="#pm-task"></use></svg></span>
           <span class="kpi-value" id="kpi-tasks">–</span>
           <span class="kpi-label">Tasks</span>
           <span class="kpi-context" id="kpi-tasks-ctx"></span>
         </div>
         <div class="card kpi-card accent-teal">
-          <span class="kpi-chip">📈</span>
+          <span class="kpi-chip"><svg aria-hidden="true"><use href="#pm-trend"></use></svg></span>
           <span class="kpi-value" id="kpi-completion">–</span>
           <span class="kpi-label">Completion rate</span>
           <span class="kpi-context" id="kpi-completion-ctx"></span>
         </div>
         <div class="card kpi-card accent-red">
-          <span class="kpi-chip">💰</span>
+          <span class="kpi-chip"><svg aria-hidden="true"><use href="#pm-finance"></use></svg></span>
           <span class="kpi-value" id="kpi-budget">–</span>
           <span class="kpi-label">Total budget</span>
           <span class="kpi-context" id="kpi-budget-ctx"></span>
@@ -69,7 +120,7 @@
 
       <div class="card reveal-2">
         <div class="card-head">
-          <h2>🧭 Portfolio Health</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-gauge"></use></svg>Portfolio Health</h2>
           <span class="card-tag" id="portfolio-count">0 projects</span>
         </div>
         <div id="health-bar" class="health-bar" role="img" aria-label="Project status distribution"></div>
@@ -79,7 +130,7 @@
 
       <div class="card reveal-2">
         <div class="card-head">
-          <h2>🎚 Filters</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-filter"></use></svg>Filters</h2>
         </div>
         <div id="status-chips" class="chips" role="group" aria-label="Filter by project status"></div>
         <label class="select-row" for="region-select">Region
@@ -91,7 +142,7 @@
 
       <div class="card reveal-2">
         <div class="card-head">
-          <h2>📁 Projects</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-projects"></use></svg>Projects</h2>
           <span class="card-tag" id="projects-shown"></span>
         </div>
         <div id="project-list" class="project-list" aria-label="Project cards"></div>
@@ -99,14 +150,14 @@
 
       <div class="card reveal-3">
         <div class="card-head">
-          <h2>📊 Project Progress</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-trend"></use></svg>Project Progress</h2>
         </div>
         <div class="chart-wrap"><canvas id="chart-progress" aria-label="Bar chart of project progress"></canvas></div>
       </div>
 
       <div id="card-finance" class="card reveal-3">
         <div class="card-head">
-          <h2>💸 Spend vs Plan</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-finance"></use></svg>Spend vs Plan</h2>
           <span class="card-tag">monthly</span>
         </div>
         <div class="chart-wrap"><canvas id="chart-finance" aria-label="Grouped bar chart of planned vs actual spend"></canvas></div>
@@ -114,18 +165,18 @@
 
       <div class="chart-duo reveal-3">
         <div class="card">
-          <h2>Tasks by Status</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-task"></use></svg>Tasks by Status</h2>
           <div class="chart-wrap chart-wrap-sm"><canvas id="chart-task-status" aria-label="Doughnut chart of task statuses"></canvas></div>
         </div>
         <div class="card">
-          <h2>Tasks by Priority</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-gauge"></use></svg>Tasks by Priority</h2>
           <div class="chart-wrap chart-wrap-sm"><canvas id="chart-priority" aria-label="Horizontal bar chart of task priorities"></canvas></div>
         </div>
       </div>
 
       <div id="card-resources" class="card reveal-3">
         <div class="card-head">
-          <h2>🧰 Resource Allocation</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-resource"></use></svg>Resource Allocation</h2>
           <span class="card-tag" id="resource-total"></span>
         </div>
         <div class="chart-wrap"><canvas id="chart-resources" aria-label="Horizontal bar chart of resource costs"></canvas></div>
@@ -133,7 +184,7 @@
 
       <div class="card reveal-3">
         <div class="card-head">
-          <h2>✅ Task Tracker</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-task"></use></svg>Task Tracker</h2>
           <span class="card-tag" id="tracker-count"></span>
         </div>
         <ul id="task-tracker" class="task-list" aria-label="Task list"></ul>
@@ -143,11 +194,11 @@
     <!-- ============ Tab 2: Health ============ -->
     <section id="tab-health" class="tab-panel" aria-label="Health">
       <div class="card">
-        <h2>🏥 Health Data</h2>
+        <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-health"></use></svg>Health Data</h2>
         <p id="health-source-line" class="source-line">Loading live GRID3 + HDX data…</p>
-        <p id="data-badge" class="data-badge" hidden>⚠ Sample data — live source unavailable</p>
+        <p id="data-badge" class="data-badge" hidden>Sample data — live source unavailable</p>
         <div class="btn-row">
-          <button id="btn-health-refresh" class="btn btn-secondary" type="button">🔄 Refresh data</button>
+          <button id="btn-health-refresh" class="btn btn-secondary" type="button"><svg aria-hidden="true"><use href="#pm-refresh"></use></svg>Refresh data</button>
         </div>
       </div>
 
@@ -159,23 +210,23 @@
       </div>
 
       <div class="card">
-        <h2>🗺 Facility Map</h2>
+        <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-map"></use></svg>Facility Map</h2>
         <div id="health-map" class="health-map" aria-label="Map of Nigerian health facilities"></div>
         <p class="map-hint">Circles = facilities per state (GRID3). Zoom in (level 8+) to load individual facility points.</p>
       </div>
 
       <div class="card">
-        <h2>🏥 Facilities by Level</h2>
+        <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-health"></use></svg>Facilities by Level</h2>
         <div class="chart-wrap"><canvas id="chart-facility-types" aria-label="Doughnut chart of facility levels"></canvas></div>
       </div>
 
       <div class="card">
-        <h2>📈 Indicator Trends</h2>
+        <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-trend"></use></svg>Indicator Trends</h2>
         <div class="chart-wrap chart-wrap-tall"><canvas id="chart-indicator-trends" aria-label="Line chart of health indicator trends"></canvas></div>
       </div>
 
       <div class="card">
-        <h2>📋 Key Indicators</h2>
+        <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-gauge"></use></svg>Key Indicators</h2>
         <p class="map-hint">Tap a checkbox to show or hide an indicator for this session.</p>
         <ul id="key-indicator-list" class="indicator-list"></ul>
       </div>
@@ -197,15 +248,15 @@
           <div class="show-stat"><span class="kpi-value">0</span><span class="kpi-label">frameworks · 0 build step</span></div>
         </div>
         <div class="btn-row">
-          <a class="btn btn-secondary" href="https://github.com/batestguy/HealthMgtDashboard" target="_blank" rel="noopener">📁 View the code</a>
-          <button id="btn-copy-email" class="btn btn-ghost" type="button">✉️ Copy email</button>
+          <a class="btn btn-secondary" href="https://github.com/batestguy/HealthMgtDashboard" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#pm-code"></use></svg>View the code</a>
+          <button id="btn-copy-email" class="btn btn-ghost" type="button"><svg aria-hidden="true"><use href="#pm-mail"></use></svg>Copy email</button>
         </div>
         <p class="show-email-line">Reach the builder at <span id="show-email" class="show-email"></span></p>
       </div>
 
       <div id="card-radar" class="card reveal-1">
         <div class="card-head">
-          <h2>🎯 Capability radar</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-gauge"></use></svg>Capability radar</h2>
           <span class="card-tag">evidence-based</span>
         </div>
         <div class="chart-wrap"><canvas id="chart-radar" aria-label="Radar of shipped feature counts: data analysis, engineering, live data APIs, UX, and health and PM domain"></canvas></div>
@@ -215,46 +266,46 @@
 
       <div class="card reveal-1">
         <div class="card-head">
-          <h2>📂 What this dashboard proves</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-projects"></use></svg>What this dashboard proves</h2>
           <span class="card-tag">feature → skill</span>
         </div>
 
         <div class="show-evidence">
           <div class="ev-card">
-            <div class="ev-head"><span class="ev-emoji">📋</span><div class="ev-title">Excel in, dashboard out — in one tap</div></div>
+            <div class="ev-head"><svg class="ev-emoji" aria-hidden="true"><use href="#pm-upload"></use></svg><div class="ev-title">Excel in, dashboard out — in one tap</div></div>
             <p class="ev-desc">Drag a multi-sheet Excel file onto the Projects tab: KPIs, six charts, filters and a
               task tracker rebuild instantly. Bad files are rejected with a list of exactly what is wrong.</p>
             <div class="ev-tags"><span class="skill-tag">Data analysis</span><span class="skill-tag">Data quality</span><span class="skill-tag">UX</span></div>
-            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="projects">Try it →</button>
+            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="projects"><svg aria-hidden="true"><use href="#pm-arrow"></use></svg>Try it</button>
           </div>
 
           <div class="ev-card">
-            <div class="ev-head"><span class="ev-emoji">🏥</span><div class="ev-title">National facility map from live APIs</div></div>
+            <div class="ev-head"><svg class="ev-emoji" aria-hidden="true"><use href="#pm-map"></use></svg><div class="ev-title">National facility map from live APIs</div></div>
             <p class="ev-desc">51,022 real facilities stream from a government data API into a zoomable map with
               per-state aggregates and marker clusters. If the internet dies mid-demo, it falls back to sample data —
               and says so.</p>
             <div class="ev-tags"><span class="skill-tag">Live APIs</span><span class="skill-tag">Engineering</span><span class="skill-tag">Health domain</span></div>
-            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="health">Try it →</button>
+            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="health"><svg aria-hidden="true"><use href="#pm-arrow"></use></svg>Try it</button>
           </div>
 
           <div class="ev-card">
-            <div class="ev-head"><span class="ev-emoji">📈</span><div class="ev-title">Indicator trends + key stats</div></div>
+            <div class="ev-head"><svg class="ev-emoji" aria-hidden="true"><use href="#pm-trend"></use></svg><div class="ev-title">Indicator trends + key stats</div></div>
             <p class="ev-desc">Immunization and malaria trend lines from public health data, plus a toggleable list of
               key indicators — hospital beds, physicians, maternal mortality and more.</p>
             <div class="ev-tags"><span class="skill-tag">Data viz</span><span class="skill-tag">Health domain</span></div>
-            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="health">Try it →</button>
+            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="health"><svg aria-hidden="true"><use href="#pm-arrow"></use></svg>Try it</button>
           </div>
 
           <div class="ev-card">
-            <div class="ev-head"><span class="ev-emoji">🧠</span><div class="ev-title">Ask your data in plain English</div></div>
+            <div class="ev-head"><svg class="ev-emoji" aria-hidden="true"><use href="#pm-ask"></use></svg><div class="ev-title">Ask your data in plain English</div></div>
             <p class="ev-desc">Type “show top 3 tasks in Lagos” or “how many facilities are in Kano” and the
               dashboard answers — typo-tolerant, multi-intent, no AI backend required.</p>
             <div class="ev-tags"><span class="skill-tag">NLQ design</span><span class="skill-tag">UX</span><span class="skill-tag">Data analysis</span></div>
-            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="ask">Try it →</button>
+            <button class="btn btn-ghost btn-sm try-it" type="button" data-goto="ask"><svg aria-hidden="true"><use href="#pm-arrow"></use></svg>Try it</button>
           </div>
 
           <div class="ev-card">
-            <div class="ev-head"><span class="ev-emoji">📤</span><div class="ev-title">One-tap reports</div></div>
+            <div class="ev-head"><svg class="ev-emoji" aria-hidden="true"><use href="#pm-export"></use></svg><div class="ev-title">One-tap reports</div></div>
             <p class="ev-desc">Snapshot the current view as a PNG, export a full multi-section PDF report, and copy a
               share link for anyone to open.</p>
             <div class="ev-tags"><span class="skill-tag">Engineering</span><span class="skill-tag">UX</span></div>
@@ -262,7 +313,7 @@
           </div>
 
           <div class="ev-card ev-underline">
-            <div class="ev-head"><span class="ev-emoji">🛠</span><div class="ev-title">Under the hood</div></div>
+            <div class="ev-head"><svg class="ev-emoji" aria-hidden="true"><use href="#pm-code"></use></svg><div class="ev-title">Under the hood</div></div>
             <ul class="ev-list">
               <li>Vanilla JavaScript only — one small hand-written module per tab, no framework</li>
               <li>Every library loaded from a CDN; deploys as static files to GitHub Pages</li>
@@ -270,14 +321,14 @@
               <li>A spec and a workflow doc drive every change; the git history shows the build, slice by slice</li>
             </ul>
             <div class="ev-tags"><span class="skill-tag">Architecture</span><span class="skill-tag">Process rigor</span><span class="skill-tag">Git</span></div>
-            <a class="btn btn-ghost btn-sm" href="https://github.com/batestguy/HealthMgtDashboard" target="_blank" rel="noopener">Read the code →</a>
+            <a class="btn btn-ghost btn-sm" href="https://github.com/batestguy/HealthMgtDashboard" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#pm-arrow"></use></svg>Read the code</a>
           </div>
         </div>
       </div>
 
       <div class="card reveal-2">
         <div class="card-head">
-          <h2>🧰 Toolchain</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-resource"></use></svg>Toolchain</h2>
         </div>
         <p class="show-subhead">Shipped in this repository</p>
         <div class="show-chips">
@@ -303,8 +354,8 @@
         <h2>Like what you see?</h2>
         <p class="show-blurb">The full source — including this page — is open. Code speaks louder than a CV.</p>
         <div class="btn-row">
-          <a class="btn btn-secondary" href="https://github.com/batestguy/HealthMgtDashboard" target="_blank" rel="noopener">📁 View the code</a>
-          <button id="btn-copy-email-2" class="btn btn-ghost" type="button">✉️ Copy email</button>
+          <a class="btn btn-secondary" href="https://github.com/batestguy/HealthMgtDashboard" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#pm-code"></use></svg>View the code</a>
+          <button id="btn-copy-email-2" class="btn btn-ghost" type="button"><svg aria-hidden="true"><use href="#pm-mail"></use></svg>Copy email</button>
         </div>
       </div>
 
@@ -315,7 +366,7 @@
     <section id="tab-ask" class="tab-panel" aria-label="Ask">
       <div class="card">
         <div class="card-head">
-          <h2>💬 Ask</h2>
+          <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-ask"></use></svg>Ask</h2>
           <span class="card-tag">your data · plain English</span>
         </div>
         <form id="nlq-form" class="nlq-form" autocomplete="off">
@@ -329,7 +380,7 @@
         <div id="nlq-chips" class="chips" role="group" aria-label="Example questions"></div>
       </div>
       <div class="card">
-        <h2>💡 How it works</h2>
+        <h2><svg class="card-icon" aria-hidden="true"><use href="#pm-code"></use></svg>How it works</h2>
         <p class="summary-text">A simulated NLQ engine — typo-tolerant keyword matching over the loaded Excel data
           and the live health feed. Queries filter the dashboard, open tabs, and answer with real numbers. No AI
           backend; every answer is computed from the data you see.</p>
@@ -338,16 +389,16 @@
 
     <!-- ============ Tab 5: Export (placeholder) ============ -->
     <section id="tab-export" class="tab-panel" aria-label="Export">
-      <div class="card"><h2>📤 Export</h2><p class="summary-text">PNG / PDF reports and the Share Link — coming in the next build step.</p></div>
+      <div class="card"><h2><svg class="card-icon" aria-hidden="true"><use href="#pm-export"></use></svg>Export</h2><p class="summary-text">PNG / PDF reports and the Share Link — coming in the next build step.</p></div>
     </section>
   </main>
 
   <nav class="tab-bar" role="tablist" aria-label="Dashboard sections">
-    <button class="tab-btn active" data-tab="projects" role="tab" aria-selected="true">📋<span>Projects</span></button>
-    <button class="tab-btn" data-tab="health" role="tab" aria-selected="false">🏥<span>Health</span></button>
-    <button class="tab-btn" data-tab="showcase" role="tab" aria-selected="false">🚀<span>This Project</span></button>
-    <button class="tab-btn" data-tab="ask" role="tab" aria-selected="false">💬<span>Ask</span></button>
-    <button class="tab-btn" data-tab="export" role="tab" aria-selected="false">📤<span>Export</span></button>
+    <button class="tab-btn active" data-tab="projects" role="tab" aria-selected="true"><svg aria-hidden="true"><use href="#pm-projects"></use></svg><span>Projects</span></button>
+    <button class="tab-btn" data-tab="health" role="tab" aria-selected="false"><svg aria-hidden="true"><use href="#pm-health"></use></svg><span>Health</span></button>
+    <button class="tab-btn" data-tab="showcase" role="tab" aria-selected="false"><svg aria-hidden="true"><use href="#pm-showcase"></use></svg><span>This Project</span></button>
+    <button class="tab-btn" data-tab="ask" role="tab" aria-selected="false"><svg aria-hidden="true"><use href="#pm-ask"></use></svg><span>Ask</span></button>
+    <button class="tab-btn" data-tab="export" role="tab" aria-selected="false"><svg aria-hidden="true"><use href="#pm-export"></use></svg><span>Export</span></button>
   </nav>
 
   <div id="toast" class="toast" hidden></div>
@@ -355,13 +406,13 @@
   <!-- App scripts: data → charts → health-data → map → health → app (app wires everything, per spec §3.1) -->
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="js/data.js?v=6"></script>
-  <script src="js/charts.js?v=6"></script>
-  <script src="js/health-data.js?v=6"></script>
-  <script src="js/map.js?v=6"></script>
-  <script src="js/health.js?v=6"></script>
-  <script src="js/showcase.js?v=6"></script>
-  <script src="js/nlq.js?v=6"></script>
-  <script src="js/app.js?v=6"></script>
+  <script src="js/data.js?v=7"></script>
+  <script src="js/charts.js?v=7"></script>
+  <script src="js/health-data.js?v=7"></script>
+  <script src="js/map.js?v=7"></script>
+  <script src="js/health.js?v=7"></script>
+  <script src="js/showcase.js?v=7"></script>
+  <script src="js/nlq.js?v=7"></script>
+  <script src="js/app.js?v=7"></script>
 </body>
 </html>

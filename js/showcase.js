@@ -125,16 +125,35 @@ window.PMShowcase = (function () {
   }
 
   // ------------------------------------------------------------------------
+  // Animated hero stats (redesign-spec §4.7 #1)
+  // ------------------------------------------------------------------------
+  function animateStats() {
+    if (!window.PMApp || !PMApp.countUp) return;
+    Array.prototype.forEach.call(document.querySelectorAll('.show-stat .kpi-value'), function (node) {
+      var raw = (node.textContent || '').replace(/[^0-9]/g, '');
+      if (raw === '') return;
+      var final = parseInt(raw, 10);
+      PMApp.countUp(node, final, function (v) { return v.toLocaleString(); });
+    });
+  }
+
+  // Re-draw the radar from cached values (theme switches rebuild charts).
+  function repaint() {
+    drawRadar();
+  }
+
+  // ------------------------------------------------------------------------
   // Init
   // ------------------------------------------------------------------------
   function init() {
     if (initialized) return;
     initialized = true;
     fillEmail();
+    animateStats();
     drawRadar();
     wireCopyEmail();
     wireTryIt();
   }
 
-  return { init: init };
+  return { init: init, repaint: repaint };
 })();

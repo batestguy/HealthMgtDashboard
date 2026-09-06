@@ -47,6 +47,25 @@ window.PMApp = (function () {
     toastTimer = setTimeout(function () { node.hidden = true; }, 2600);
   }
 
+  var REDUCED_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  // Animated KPI counter (redesign-spec §4.7 #1); instant when motion reduced.
+  function countUp(el, final, formatter, duration) {
+    if (!el) return;
+    var fmt = formatter || function (v) { return String(v); };
+    if (REDUCED_MOTION) { el.textContent = fmt(final); return; }
+    var dur = duration || 700;
+    var t0 = null;
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min((ts - t0) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(Math.round(final * eased));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
   // ---------- tab navigation ----------
   function initTabs() {
     var buttons = document.querySelectorAll('.tab-btn');
@@ -71,7 +90,10 @@ window.PMApp = (function () {
   function activateTab(name) {
     var panels = document.querySelectorAll('.tab-panel');
     Array.prototype.forEach.call(panels, function (p) {
-      p.classList.toggle('active', p.id === 'tab-' + name);
+      var on = p.id === 'tab-' + name;
+      p.classList.toggle('active', on);
+      p.classList.remove('panel-in');
+      if (on) { void p.offsetWidth; p.classList.add('panel-in'); } // retrigger transition
     });
     var buttons = document.querySelectorAll('.tab-btn');
     Array.prototype.forEach.call(buttons, function (b) {
@@ -350,13 +372,14 @@ window.PMApp = (function () {
       (finByP[p.ProjectID] || []).forEach(function (f) { spend += Number(f.ActualSpend) || 0; });
     });
 
-    $('kpi-projects').textContent = String(projs.length);
+    countUp($('kpi-projects'), projs.length, function (v) { return String(v); });
     $('kpi-projects-ctx').textContent = projs.length ? regionList({ projects: projs, locations: [] }).length + ' regions' : '';
-    $('kpi-tasks').textContent = String(tasks.length);
+    countUp($('kpi-tasks'), tasks.length, function (v) { return String(v); });
     $('kpi-tasks-ctx').textContent = open + ' open'; // tasks list shows ALL tasks; ctx reflects open count
-    $('kpi-completion').textContent = tasks.length ? Math.round((done / tasks.length) * 100) + '%' : '–';
+    var pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+    countUp($('kpi-completion'), pct, function (v) { return (tasks.length ? v + '%' : '–'); });
     $('kpi-completion-ctx').textContent = done + ' of ' + tasks.length + ' done';
-    $('kpi-budget').textContent = fmtNaira(budget);
+    countUp($('kpi-budget'), budget, fmtNaira);
     $('kpi-budget-ctx').textContent = spend ? fmtNaira(spend) + ' spent' : '';
   }
 
@@ -650,6 +673,7 @@ window.PMApp = (function () {
     initTabs();
     initUpload();
     initProjectList();
+    initTheme();
     // Deep-link support (#health, #showcase, …) — also used by tab switches.
     activateTab(tabFromHash());
     // Auto-load the seeded sample so the dashboard is demo-ready on first open.
@@ -670,6 +694,51 @@ window.PMApp = (function () {
     init();
   }
 
+  // ---------- Theme (redesign-spec §4.1, R16) ----------
+  function activeTabName() {
+    var p = document.querySelector('.tab-panel.active');
+    return p ? p.id.replace('tab-', '') : 'showcase';
+  }
+
+  function repaintActive() {
+    var name = activeTabName();
+    if (name === 'projects' && PMData.hasData()) renderAll();
+    else if (name === 'health' && window.PMHealth && PMHealth.repaint) PMHealth.repaint();
+    else if (name === 'showcase' && window.PMShowcase && PMShowcase.repaint) PMShowcase.repaint();
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('pm-theme', theme); } catch (e) { /* storage blocked */ }
+    var icon = $('theme-toggle-icon');
+    if (icon) icon.setAttribute('href', theme === 'dark' ? '#pm-sun' : '#pm-moon');
+    // Charts read tokens at draw time — rebuild the current tab's charts.
+    PMCharts.destroyAll();
+    repaintActive();
+  }
+
+  function initTheme() {
+    var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyTheme(cur);
+    var toggle = $('theme-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        applyTheme(cur === 'dark' ? 'light' : 'dark');
+        cur = cur === 'dark' ? 'light' : 'dark';
+      });
+    }
+  }
+
+  // Header live/sample status chip (driven by the Health tab data source).
+  function setLiveStatus(anyLive, label) {
+    var chip = $('live-status');
+    if (!chip) return;
+    var text = $('live-status-text');
+    chip.classList.toggle('sample', !anyLive);
+    if (text) text.textContent = label || (anyLive ? 'Live data' : 'Sample data');
+    chip.hidden = false;
+  }
+
   // ---------- APIs for the NLQ engine (js/nlq.js) ----------
   function goto(name) {
     var btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
@@ -685,5 +754,5 @@ window.PMApp = (function () {
     if (PMData.hasData()) renderAll();
   }
 
-  return { toast: toast, goto: goto, setProjectFilters: setProjectFilters, loadSample: loadSample };
+  return { toast: toast, goto: goto, setProjectFilters: setProjectFilters, loadSample: loadSample, countUp: countUp, setLiveStatus: setLiveStatus };
 })();

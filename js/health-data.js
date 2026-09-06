@@ -328,6 +328,11 @@ window.PMHealthData = (function () {
     };
   }
 
+  // Cached values (no fetch) — used by PMHealth.repaint() after a theme
+  // switch so charts rebuild from the same data without another API call.
+  function currentAggregates() { return aggregates; }
+  function currentIndicators() { return indicators; }
+
   function resetSession() {
     aggregates = null;
     indicators = null;
@@ -343,6 +348,8 @@ window.PMHealthData = (function () {
     countFacilitiesInState: countFacilitiesInState,
     getStateCentroids: getStateCentroids,
     currentState: currentState,
+    currentAggregates: currentAggregates,
+    currentIndicators: currentIndicators,
     resetSession: resetSession,
     // Exposed for tests / future modules:
     seedFacilities: getSeedPoints,
