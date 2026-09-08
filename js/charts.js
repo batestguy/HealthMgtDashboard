@@ -247,6 +247,18 @@ window.PMCharts = (function () {
     return at;
   }
 
+  // The gold accent (§4.6 "green -> gold for the last bar") is a flourish for
+  // bars that are all one hue. When the caller passes per-bar colors that MEAN
+  // something — the Projects progress chart colors each bar by project status —
+  // recoloring the tallest bar gold silently reports the wrong status: Kaduna
+  // rendered gold at 100% while its actual status is "Completed" (green), both
+  // on screen and in the PDF. So: more than one distinct color in, no accent.
+  function accentFor(colors, values) {
+    var distinct = {};
+    (colors || []).forEach(function (c) { if (c) distinct[String(c)] = 1; });
+    return Object.keys(distinct).length > 1 ? -1 : leadIndex(values);
+  }
+
   // Per-bar scriptable fill: each bar gradients in its own color, and the
   // leading bar switches to gold (§4.6 "green -> gold for the last bar").
   function barFill(colors, vertical, accentIndex) {
@@ -319,7 +331,7 @@ window.PMCharts = (function () {
         labels: labels,
         datasets: [{
           data: values,
-          backgroundColor: barFill(colors, true, leadIndex(values)),
+          backgroundColor: barFill(colors, true, accentFor(colors, values)),
           borderRadius: 6,
           maxBarThickness: 40,
           hoverBackgroundColor: colors

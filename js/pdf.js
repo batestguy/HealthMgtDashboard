@@ -222,8 +222,18 @@
       if (!tasksByP[t.ProjectID]) tasksByP[t.ProjectID] = [];
       tasksByP[t.ProjectID].push(t);
     });
+    // Full project names are long enough ("Enugu Vaccine Storage Audit") that
+    // Chart.js rotates them, and a rotated label is anchored at its tick and
+    // trails off to the right — so each name visually sits under the NEXT bar.
+    // Shortened to the leading state/place word plus one more for the capture
+    // only; the per-project table above the chart carries the full names.
+    var shortLabel = function (name) {
+      var s = String(name || '');
+      var words = s.split(/\s+/);
+      return words.length > 2 ? words.slice(0, 2).join(' ') : s;
+    };
     return {
-      labels: ds.projects.map(function (pr) { return pr.Name || pr.ProjectID; }),
+      labels: ds.projects.map(function (pr) { return shortLabel(pr.Name || pr.ProjectID); }),
       values: ds.projects.map(function (pr) {
         var t = tasksByP[pr.ProjectID] || [];
         if (!t.length) return 0;
@@ -806,7 +816,26 @@
       if (doughnutJpeg) {
         var dw = contentW * 0.62;
         var dh = Math.min(dw * 0.75, 70);
+        // Reconcile the doughnut against the headline Facilities KPI. The two
+        // legitimately differ — GRID3 leaves some rows with no facility level —
+        // but side by side, an unexplained "51k" and "46.1k" read as an error.
+        var levelSum = 0;
+        if (agg && agg.levels) {
+          agg.levels.forEach(function (l) { levelSum += (l.count || 0); });
+        }
+        var unlevelled = (agg && agg.total ? agg.total : 0) - levelSum;
         var levelNote = 'Level counts come from the GRID3 group-by on facility_level_option (or seeded fallback). Colors are drawn by PMCharts from its palette; the PDF embeds the rendered Chart.js canvas as a JPEG.';
+        if (unlevelled > 0) {
+          // Exact counts, not fmtMetric: the whole point of this line is to
+          // reconcile two numbers a reader has just seen disagree, and "46k of
+          // 51k, remaining 5k" next to a "46.1k" centre label reintroduces the
+          // very mismatch it is here to explain. These three must add up on the
+          // page.
+          levelNote = 'These six levels cover ' + groupNum(levelSum) + ' of the ' + groupNum(agg.total) +
+            ' facilities in the KPI above; the remaining ' + groupNum(unlevelled) +
+            ' carry no facility_level_option value in GRID3 and are not plotted. (This is a different subset from the ' +
+            'ownership split above, which excludes the Unknown-ownership rows.) ' + levelNote;
+        }
         // Title + image + wrapped caption move as one block.
         needSpace(dh + 6 + bodyH(pdf, p.w, levelNote, 8.5));
         pdf.setFontSize(9.5);
@@ -1012,6 +1041,15 @@
     if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
     if (n >= 1e3) return (n / 1e3).toFixed(0).replace(/\.0$/, '') + 'k';
     return String(n);
+  }
+
+  // Exact count with thousands separators. fmtMetric() is right for headline
+  // KPIs, but wrong wherever figures have to visibly reconcile — rounding to
+  // "46k + 5k = 51k" beside a "46.1k" chart label reads as an inconsistency.
+  // Uses an explicit regex rather than toLocaleString so the separator is a
+  // comma regardless of the viewer's locale (the PDF is a fixed artifact).
+  function groupNum(n) {
+    return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
   function init() {
