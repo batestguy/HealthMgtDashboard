@@ -87,6 +87,21 @@ window.PMApp = (function () {
     return known ? t : 'showcase';
   }
 
+  // Chart tabs whose canvases were destroyed by a theme switch while they were
+  // hidden. applyTheme() has to destroy every chart (they bake theme tokens in
+  // at draw time), but it can only usefully repaint the visible one — a hidden
+  // .tab-panel is display:none, so its canvas has no layout and would redraw at
+  // 0x0. They are repainted on the way back in, by activateTab(), instead.
+  // Without this the charts never came back at all: each module's init() is
+  // guarded by an `initialized` flag, so re-opening the tab was a no-op and the
+  // canvas sat at its unsized 300x150 default.
+  //
+  // Declared here, above activateTab(), and not down with applyTheme(): init()
+  // is invoked partway through this IIFE and calls activateTab() synchronously
+  // when the DOM is already parsed, so a declaration below that point would
+  // still be hoisted-but-undefined and throw on the first tab activation.
+  var staleCharts = {};
+
   function activateTab(name) {
     var panels = document.querySelectorAll('.tab-panel');
     Array.prototype.forEach.call(panels, function (p) {
@@ -105,6 +120,13 @@ window.PMApp = (function () {
     if (name === 'health' && window.PMHealth) window.PMHealth.init();
     if (name === 'showcase' && window.PMShowcase) window.PMShowcase.init();
     if (name === 'ask' && window.PMNlq) window.PMNlq.init();
+
+    // The panel is laid out now, so a tab whose charts a theme switch destroyed
+    // while it was hidden can finally be redrawn (see staleCharts).
+    if (staleCharts[name]) {
+      delete staleCharts[name];
+      repaintTab(name);
+    }
   }
 
   // ---------- Excel upload ----------
@@ -700,11 +722,14 @@ window.PMApp = (function () {
     return p ? p.id.replace('tab-', '') : 'showcase';
   }
 
-  function repaintActive() {
-    var name = activeTabName();
+  function repaintTab(name) {
     if (name === 'projects' && PMData.hasData()) renderAll();
     else if (name === 'health' && window.PMHealth && PMHealth.repaint) PMHealth.repaint();
     else if (name === 'showcase' && window.PMShowcase && PMShowcase.repaint) PMShowcase.repaint();
+  }
+
+  function repaintActive() {
+    repaintTab(activeTabName());
   }
 
   function applyTheme(theme) {
@@ -712,9 +737,13 @@ window.PMApp = (function () {
     try { localStorage.setItem('pm-theme', theme); } catch (e) { /* storage blocked */ }
     var icon = $('theme-toggle-icon');
     if (icon) icon.setAttribute('href', theme === 'dark' ? '#pm-sun' : '#pm-moon');
-    // Charts read tokens at draw time — rebuild the current tab's charts.
+    // Charts read tokens at draw time — rebuild the current tab's charts now
+    // and flag the rest to be rebuilt when they are next shown.
     PMCharts.destroyAll();
-    repaintActive();
+    var active = activeTabName();
+    staleCharts = { projects: true, health: true, showcase: true };
+    delete staleCharts[active];
+    repaintTab(active);
   }
 
   function initTheme() {
