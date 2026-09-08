@@ -754,5 +754,7 @@ window.PMApp = (function () {
     if (PMData.hasData()) renderAll();
   }
 
-  return { toast: toast, goto: goto, setProjectFilters: setProjectFilters, loadSample: loadSample, countUp: countUp, setLiveStatus: setLiveStatus };
+  // activeTabName is public because js/pdf.js prints the active tab on page 1
+  // of the report; without it that line always read "showcase".
+  return { toast: toast, goto: goto, setProjectFilters: setProjectFilters, loadSample: loadSample, countUp: countUp, setLiveStatus: setLiveStatus, activeTabName: activeTabName };
 })();

@@ -9,10 +9,9 @@
 window.PMShowcase = (function () {
   'use strict';
 
-  // ⟦COPY-LOCK⟧ Replace with the real address before sharing this link with
-  // recruiters (showcase-spec.md §7). Single source of truth for the UI text
-  // and the clipboard button.
-  var EMAIL = 'you@example.com';
+  // Single source of truth for the visible address and both "Copy email"
+  // buttons (showcase-spec.md §7 — copy-lock resolved 2026-09-07).
+  var EMAIL = 'batesthommie@gmail.com';
 
   var initialized = false;
 

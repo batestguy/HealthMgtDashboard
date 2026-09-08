@@ -14,6 +14,16 @@ window.PMCharts = (function () {
   var registry = {};
   var REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
+  // Token lookups normally resolve against <html>. withThemeScope() repoints
+  // them at another element, so an offscreen stage carrying data-theme="light"
+  // renders paper-themed charts while the live page stays on whatever theme
+  // the user picked (js/pdf.js is the only caller).
+  var scopeEl = null;
+  // True while a withThemeScope() capture is running. Animation is forced off
+  // for the duration so the canvas is fully painted by the time the caller
+  // reads it back — an animated chart snapshots half-drawn.
+  var capturing = false;
+
   function destroy(id) {
     if (registry[id]) {
       registry[id].destroy();
@@ -25,17 +35,45 @@ window.PMCharts = (function () {
     Object.keys(registry).forEach(destroy);
   }
 
-  // Read a CSS token (--name) as a string.
+  // Public accessor for a live Chart.js instance (js/pdf.js needs the instance
+  // itself to read its canvas back). Replaces the old reach for a private
+  // `_registry` that was never exported.
+  function get(id) { return registry[id]; }
+
+  // Read a CSS token (--name) as a string, resolved against the current theme
+  // scope (see withThemeScope) or <html> by default.
   function token(name) {
     try {
-      return (getComputedStyle(document.documentElement).getPropertyValue('--' + name) || '').trim();
+      return (getComputedStyle(scopeEl || document.documentElement).getPropertyValue('--' + name) || '').trim();
     } catch (e) { return ''; }
+  }
+
+  // Render fn() with tokens resolved against `el` and animation disabled.
+  // CSS custom properties inherit, so an element carrying data-theme="light"
+  // yields the light palette with no flash on the real page. Restores the
+  // previous scope even if fn() throws.
+  function withThemeScope(el, fn) {
+    var prevScope = scopeEl;
+    var prevCapturing = capturing;
+    scopeEl = el || null;
+    capturing = true;
+    try {
+      return fn();
+    } finally {
+      scopeEl = prevScope;
+      capturing = prevCapturing;
+    }
   }
 
   var BODY_FONT = "'Space Grotesk', system-ui, sans-serif";
   var MONO_FONT = "'IBM Plex Mono', ui-monospace, monospace";
 
-  var ANIMATION = REDUCED ? false : { duration: 700, easing: 'easeOutQuart' };
+  // Evaluated per chart build: `false` under reduced-motion, and `false` during
+  // a capture so the chart paints synchronously in the constructor.
+  function animation() {
+    if (REDUCED || capturing) return false;
+    return { duration: 700, easing: 'easeOutQuart' };
+  }
 
   // Shared legend config (only where legends are shown).
   // Chart.js auto-swatches from dataset pointBackgroundColor; for multi-series
@@ -141,12 +179,15 @@ window.PMCharts = (function () {
     };
   }
 
-  // Y-axis only, hairline grid, mono ticks.
+  // Y-axis only, dashed hairline grid, mono ticks (redesign-spec §4.6).
+  // Overrides are merged *per axis* rather than replacing the whole axis:
+  // every caller restates `y`/`x` for its own ticks, and a flat Object.assign
+  // silently dropped the grid/border styling here for all of them.
   function gridAxes(overrides) {
-    return Object.assign({
+    var base = {
       y: {
         beginAtZero: true,
-        grid: { color: token('hairline'), drawBorder: false },
+        grid: { color: token('hairline'), drawBorder: false, borderDash: [3, 4] },
         border: { display: false },
         ticks: { color: token('ink-faint'), font: { family: MONO_FONT, size: 10 }, padding: 6 }
       },
@@ -155,7 +196,97 @@ window.PMCharts = (function () {
         border: { display: false },
         ticks: { color: token('ink-faint'), font: { family: MONO_FONT, size: 10 } }
       }
-    }, overrides || {});
+    };
+    Object.keys(overrides || {}).forEach(function (axis) {
+      base[axis] = Object.assign({}, base[axis], overrides[axis]);
+    });
+    return base;
+  }
+
+  // ---------- gradient fills (redesign-spec §4.6) ----------
+
+  // Append an 8-digit-hex alpha suffix to a #rrggbb color. Every color in this
+  // app is hex (tokens + the status maps in app.js); anything else is returned
+  // untouched so a stray rgb()/named color degrades to a flat fill.
+  function alpha(color, suffix) {
+    var c = String(color || '');
+    return /^#[0-9a-fA-F]{6}$/.test(c) ? c + suffix : c;
+  }
+
+  // Scriptable gradient fill across the chart area. `vertical` runs
+  // bottom -> top (bars grow up, so the strong stop sits on the axis and the
+  // tip fades); horizontal runs left -> right for hbar.
+  //
+  // MUST return the flat color when chartArea is undefined: Chart.js evaluates
+  // scriptable options once before the first layout pass, and reading
+  // area.bottom there throws.
+  function gradient(color, vertical, fromAlpha, toAlpha) {
+    return function (ctx) {
+      var area = ctx && ctx.chart && ctx.chart.chartArea;
+      if (!area) return color;
+      var g;
+      try {
+        g = vertical
+          ? ctx.chart.ctx.createLinearGradient(0, area.bottom, 0, area.top)
+          : ctx.chart.ctx.createLinearGradient(area.left, 0, area.right, 0);
+        g.addColorStop(0, alpha(color, fromAlpha || 'ff'));
+        g.addColorStop(1, alpha(color, toAlpha || '33'));
+      } catch (e) { return color; }
+      return g;
+    };
+  }
+
+  // Index of the leading (highest) bar — it gets the gold accent gradient.
+  // -1 when every value is zero, so an empty chart has no false leader.
+  function leadIndex(values) {
+    var best = 0, at = -1;
+    (values || []).forEach(function (v, i) {
+      var n = Number(v) || 0;
+      if (n > best) { best = n; at = i; }
+    });
+    return at;
+  }
+
+  // Per-bar scriptable fill: each bar gradients in its own color, and the
+  // leading bar switches to gold (§4.6 "green -> gold for the last bar").
+  function barFill(colors, vertical, accentIndex) {
+    return function (ctx) {
+      var i = ctx && ctx.dataIndex ? ctx.dataIndex : 0;
+      var base = colors[i % colors.length];
+      if (accentIndex >= 0 && i === accentIndex) base = token('gold') || base;
+      return gradient(base, vertical, 'ff', '33')(ctx);
+    };
+  }
+
+  // Center label for the doughnut ring (§4.6 "center label optional"): the
+  // total in mono, a caption underneath. Declared inline per chart so it is
+  // never registered globally and only ever affects the chart it is given to.
+  function centerLabel(caption) {
+    return {
+      id: 'pmCenterLabel',
+      afterDatasetsDraw: function (chart) {
+        var area = chart.chartArea;
+        if (!area) return;
+        var data = (chart.data.datasets[0] && chart.data.datasets[0].data) || [];
+        var total = 0;
+        data.forEach(function (v) { total += Number(v) || 0; });
+        var meta = chart.getDatasetMeta(0);
+        var arc = meta && meta.data && meta.data[0];
+        var cx = arc ? arc.x : (area.left + area.right) / 2;
+        var cy = arc ? arc.y : (area.top + area.bottom) / 2;
+        var c = chart.ctx;
+        c.save();
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillStyle = token('ink');
+        c.font = '600 18px ' + MONO_FONT;
+        c.fillText(compact(total), cx, cy - 6);
+        c.fillStyle = token('ink-faint');
+        c.font = '500 10px ' + BODY_FONT;
+        c.fillText(caption, cx, cy + 10);
+        c.restore();
+      }
+    };
   }
 
   function bar(id, labels, values, colors, opts) {
@@ -168,7 +299,7 @@ window.PMCharts = (function () {
     var options = Object.assign({
       responsive: true,
       maintainAspectRatio: false,
-      animation: ANIMATION,
+      animation: animation(),
       plugins: {
         legend: { display: false },
         tooltip: Object.assign(tooltipTheme(), {
@@ -188,10 +319,10 @@ window.PMCharts = (function () {
         labels: labels,
         datasets: [{
           data: values,
-          backgroundColor: colors,
-          borderRadius: 5,
+          backgroundColor: barFill(colors, true, leadIndex(values)),
+          borderRadius: 6,
           maxBarThickness: 40,
-          hoverBackgroundColor: colors.map(function (c) { return c; })
+          hoverBackgroundColor: colors
         }]
       },
       options: options
@@ -199,8 +330,16 @@ window.PMCharts = (function () {
     return registry[id];
   }
 
-  var PALETTE = [token('green'), token('gold'), token('green-soft'), token('bad'), token('info'), token('ink-faint')];
-  function colorFor(i) { return PALETTE[i % PALETTE.length] || '#a0aec0'; }
+  // Evaluated per call, never cached: reading the tokens once at module load
+  // froze the light-theme hexes for the whole session, so every palette-driven
+  // series (doughnut slices, grouped bars) stayed light in dark mode.
+  function palette() {
+    return [token('green'), token('gold'), token('green-soft'), token('bad'), token('info'), token('ink-faint')];
+  }
+  function colorFor(i) {
+    var p = palette();
+    return p[i % p.length] || '#a0aec0';
+  }
 
   // Distinct two-color scheme for health trend lines so the two series never
   // collide (the global PALETTE assigns the same gold to both the 1st and 2nd
@@ -216,13 +355,31 @@ window.PMCharts = (function () {
     return i === 0 ? token('green') : token('gold-bright');
   }
 
-  function doughnut(id, labels, values) {
+  function doughnut(id, labels, values, opts) {
     if (typeof Chart === 'undefined') {
       throw new Error('Chart.js failed to load from CDN.');
     }
     destroy(id);
     var canvas = document.getElementById(id);
     if (!canvas) return;
+    var options = Object.assign({
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: animation(),
+      plugins: {
+        legend: legend(true),
+        tooltip: Object.assign(tooltipTheme(), {
+          callbacks: {
+            label: function (ctx) {
+              var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0) || 1;
+              return ' ' + ctx.label + ': ' + ctx.parsed.toLocaleString() + ' (' + Math.round((ctx.parsed / total) * 100) + '%)';
+            }
+          }
+        })
+      },
+      cutout: '58%'
+    }, opts || {});
+
     registry[id] = new Chart(canvas, {
       type: 'doughnut',
       data: {
@@ -230,43 +387,46 @@ window.PMCharts = (function () {
         datasets: [{
           data: values,
           backgroundColor: labels.map(function (_, i) { return colorFor(i); }),
-          borderWidth: 3,
+          borderWidth: 4, // §4.6: 4px gaps between slices
           borderColor: token('card'),
           hoverOffset: 6
         }]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: ANIMATION,
-        plugins: {
-          legend: legend(true),
-          tooltip: Object.assign(tooltipTheme(), {
-            callbacks: {
-              label: function (ctx) {
-                var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0) || 1;
-                return ' ' + ctx.label + ': ' + ctx.parsed.toLocaleString() + ' (' + Math.round((ctx.parsed / total) * 100) + '%)';
-              }
-            }
-          })
-        },
-        cutout: '58%'
-      }
+      options: options,
+      plugins: [centerLabel((opts && opts.centerCaption) || 'total')]
     });
     return registry[id];
   }
 
-  function line(id, labels, series) {
+  function line(id, labels, series, opts) {
     if (typeof Chart === 'undefined') {
       throw new Error('Chart.js failed to load from CDN.');
     }
     destroy(id);
     var canvas = document.getElementById(id);
     if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var grad = ctx.createLinearGradient(0, 0, 0, 300);
-    grad.addColorStop(0, token('green') + '33'); // ~20% alpha hex suffix
-    grad.addColorStop(1, token('green') + '00');
+    // Under-line wash for series 0 only (§4.6). Derived from the real
+    // chartArea rather than a hardcoded 300px height, so it still fades to
+    // the axis at any canvas size — including the tall PDF capture stage.
+    var grad = gradient(token('green'), true, '00', '33');
+    var options = Object.assign({
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: animation(),
+      plugins: {
+        legend: { display: false },
+        tooltip: Object.assign(tooltipTheme(), {
+          callbacks: {
+            label: function (ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y; }
+          }
+        })
+      },
+      scales: gridAxes({
+        y: { beginAtZero: true, ticks: { color: token('ink-faint'), font: { family: MONO_FONT, size: 10 } } },
+        x: { ticks: { maxTicksLimit: 8, color: token('ink-faint'), font: { family: MONO_FONT, size: 10 } } }
+      })
+    }, opts || {});
+
     registry[id] = new Chart(canvas, {
       type: 'line',
       data: {
@@ -288,23 +448,7 @@ window.PMCharts = (function () {
           };
         })
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: ANIMATION,
-        plugins: {
-          legend: { display: false },
-          tooltip: Object.assign(tooltipTheme(), {
-            callbacks: {
-              label: function (ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y; }
-            }
-          })
-        },
-        scales: gridAxes({
-          y: { beginAtZero: true, ticks: { color: token('ink-faint'), font: { family: MONO_FONT, size: 10 } } },
-          x: { ticks: { maxTicksLimit: 8, color: token('ink-faint'), font: { family: MONO_FONT, size: 10 } } }
-        })
-      }
+      options: options
     });
     renderHealthLegend(id, [token('green'), token('gold-bright')], series.map(function (s) { return s.label; }));
     return registry[id];
@@ -326,7 +470,8 @@ window.PMCharts = (function () {
           return {
             label: s.label,
             data: s.data,
-            backgroundColor: s.color || colorFor(i),
+            backgroundColor: gradient(s.color || colorFor(i), true, 'ff', '33'),
+            hoverBackgroundColor: s.color || colorFor(i),
             borderRadius: 4,
             maxBarThickness: 20,
             borderSkipped: false
@@ -336,7 +481,7 @@ window.PMCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: ANIMATION,
+        animation: animation(),
         plugins: {
           legend: legend(true),
           tooltip: Object.assign(tooltipTheme(), {
@@ -376,8 +521,9 @@ window.PMCharts = (function () {
         labels: labels,
         datasets: [{
           data: values,
-          backgroundColor: colors,
-          borderRadius: 5,
+          backgroundColor: barFill(colors, false, -1),
+          hoverBackgroundColor: colors,
+          borderRadius: 6,
           maxBarThickness: 16,
           borderSkipped: false
         }]
@@ -386,7 +532,7 @@ window.PMCharts = (function () {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        animation: ANIMATION,
+        animation: animation(),
         plugins: {
           legend: { display: false },
           tooltip: Object.assign(tooltipTheme(), {
@@ -418,7 +564,7 @@ window.PMCharts = (function () {
     var options = Object.assign({
       responsive: true,
       maintainAspectRatio: false,
-      animation: ANIMATION,
+      animation: animation(),
       plugins: {
         legend: { display: false },
         tooltip: Object.assign(tooltipTheme(), {
@@ -459,5 +605,8 @@ window.PMCharts = (function () {
     return registry[id];
   }
 
-  return { bar: bar, groupedBar: groupedBar, hbar: hbar, doughnut: doughnut, line: line, radar: radar, destroy: destroy, destroyAll: destroyAll };
+  return {
+    bar: bar, groupedBar: groupedBar, hbar: hbar, doughnut: doughnut, line: line, radar: radar,
+    destroy: destroy, destroyAll: destroyAll, get: get, withThemeScope: withThemeScope
+  };
 })();

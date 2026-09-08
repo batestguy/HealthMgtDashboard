@@ -6,8 +6,13 @@
    by an inline script in index.html).
    ========================================================================== */
 
-/* ---------- Tokens: light (paper atlas, default) ---------- */
-:root {
+/* ---------- Tokens: light (paper atlas, default) ----------
+   Also matched on any [data-theme="light"] element, not just <html>: custom
+   properties inherit, so a nested element can opt back into the light palette
+   while the page stays dark. js/pdf.js relies on this for its offscreen
+   capture stage (#pdf-stage) — print = paper. */
+:root,
+[data-theme="light"] {
   --bg: #f6f1e7;
   --bg-raised: #fbf8f0;
   --card: #fffdf7;
@@ -546,6 +551,29 @@ body {
 .chart-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
 .chart-duo .card { margin-bottom: 0; }
 .chart-duo .card h2 { font-size: 0.9rem; }
+
+/* ---------- PDF capture stage (js/pdf.js) ----------
+   Offscreen host for the pdfcap-* canvases the PDF report renders for itself.
+   Parked off the left edge rather than display:none on purpose: a hidden
+   element gets no layout, so its canvases would capture blank — that is
+   exactly why the report shipped without charts for four commits.
+   The stage carries data-theme="light" so the light token block above applies
+   inside it and the captured charts are paper-themed regardless of the active
+   UI theme. Sizes mirror CAP_SIZE in js/pdf.js (the canvas width/height
+   attributes are what Chart.js actually draws at) — keep the two in step. */
+#pdf-stage {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 960px;
+  background: var(--card);
+  pointer-events: none;
+  z-index: -1;
+}
+#pdf-stage .pdf-stage-wrap { position: relative; width: 960px; height: 406px; }
+#pdf-stage .pdf-stage-wrap.is-doughnut { width: 640px; height: 400px; }
+#pdf-stage .pdf-stage-wrap.is-trends { height: 404px; }
+#pdf-stage canvas { display: block; }
 
 /* ---------- Summary ---------- */
 .summary-text { margin: 0; color: var(--ink-soft); }

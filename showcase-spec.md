@@ -177,7 +177,7 @@ All copy is placeholder `⟦…⟧` until the **copy-lock pass** (S12), which mu
 | Hero H1 + blurb | Drafted (generic, jargon-free) | Personal voice, actual achievements, tone check |
 | Stat strip values | Draft numbers from the real app (51,022 · 5 sections · 0 frameworks) | Confirm which stats sell best |
 | Evidence card wording | Drafted per §3.3 | Factual check + which cards to keep |
-| Email address | Placeholder `you@example.com` | **Real address** (public exposure — confirm) |
+| Email address | ~~Placeholder `you@example.com`~~ — **resolved 2026-09-07:** real address `batesthommie@gmail.com` in `js/showcase.js` (`EMAIL`), feeding the visible text and both Copy-email buttons | — |
 | GitHub URL | Real already (`batestguy/HealthMgtDashboard`) | — |
 | Adjacent tools list | Draft (SQL, Python, Power BI, API design, Agile) | Add/remove |
 | CV | **Absent by decision (S4)** | When a file exists: add download + decide in-repo vs external |

@@ -39,13 +39,18 @@ Read this before starting any work; follow it for every feature, fix, and releas
    | Health tab controller (KPIs, badge, refresh) | `js/health.js` |
    | Recruiter showcase tab (radar, evidence, copy-email) | `js/showcase.js` |
    | NLQ engine (Ask tab) | `js/nlq.js` |
-   | PNG + share link + PDF (Export) | `js/export.js` (PNG snapshot + share link live) + `js/pdf.js` (multi-section PDF: jsPDF loaded from the CDN in `index.html` `<head>` library block at `jspdf@4.2.1`; charts embedded as JPEG snapshots from Chart.js instances; always green/gold on paper; filename `dashboard-report-YYYY-MM-DD.pdf`) |
-| Multi-section PDF report (Export) | `js/pdf.js` — wires the "Download PDF report" button; assumes jsPDF is already on the page from the CDN `<script>` (load order: jsPDF CDN → leaflet → local js/*.js → app.js); re-renders active-tab charts, embeds them as JPEG, always prints light "paper" theme regardless of active UI theme |   | Bespoke Health trend legend | `renderHealthLegend()` in `js/charts.js` |
+   | PNG + share link + PDF (Export) | `js/export.js` (PNG snapshot + share link live) + `js/pdf.js` (multi-section PDF: jsPDF loaded from the CDN in `index.html` `<head>` library block at `jspdf@4.2.1`; charts rendered onto the module's own offscreen `#pdf-stage` and embedded as JPEGs; always green/gold on paper; filename `dashboard-report-YYYY-MM-DD.pdf`) |
+| Multi-section PDF report (Export) | `js/pdf.js` — wires the "Download PDF report" button; resolves the constructor through `jsPDFCtor()` **at click time**, because the UMD bundle exposes it as `window.jspdf.jsPDF` (never a bare `jsPDF`) and the `<head>` `<script>` may still be in flight when the module is evaluated (load order: jsPDF CDN → leaflet → local js/*.js → app.js). **Never snapshots the live charts**: `withStage()` builds an offscreen forced-light stage (`#pdf-stage`, `pdfcap-progress` / `pdfcap-facilities` / `pdfcap-trends` canvases) via `PMCharts.withThemeScope`, reads them back with `PMCharts.get()`, logs each capture's byte length with `console.info`, and tears the stage down — so the report always prints the light "paper" theme, never depends on which tab is open, and never disturbs the page |   | Bespoke Health trend legend | `renderHealthLegend()` in `js/charts.js` |
    | All styles | `css/styles.css` |
    | Seeded workbook source | `tools/generate-sample-xlsx.js` |
-   | jsPDF (CDN) | `https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js?v=10` in the `<head>` library block (loaded before leaflet) |
+   | jsPDF (CDN) | `https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js` in the `<head>` library block (loaded before leaflet) |
+   | html2canvas (CDN) | `https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js` in the same `<head>` block, immediately after jsPDF |
 
-   Script order in `index.html`: jsPDF CDN → leaflet → markercluster → data → charts → health-data → map → health → showcase → nlq → export → pdf → app (app wires everything last; `export.js` and `pdf.js` sit before `app.js`; jsPDF CDN is in the `<head>` library block, before leaflet).
+   Script order in `index.html`: jsPDF CDN → html2canvas CDN → leaflet → markercluster → data → charts → health-data → map → health → showcase → nlq → export → pdf → app (app wires everything last; `export.js` and `pdf.js` sit before `app.js`; both Export libraries are in the `<head>` library block, before leaflet).
+
+   The CDN URLs carry no `?v=` — the `?v=N` cache-bust convention applies to local `css/`+`js/` only. A pinned CDN path is already immutable, and a stray `?v=` on one just made it look as though the version mattered.
+
+   **Adding a library is two edits, not one.** A new CDN `<script>` in `index.html` *and* the code that uses it. `js/export.js` and `js/pdf.js` each guard for a missing library and report it on the status line, so a forgotten tag presents as "PNG/PDF library did not load from CDN" rather than a console error — indistinguishable from a real CDN outage, and it hid both Export features being non-functional for several commits. Verify a new library end-to-end in the browser, never by reading the guard.
 4. **Preview locally** — serve the folder over HTTP (no bundler, no dev server config):
 
    ```bash
