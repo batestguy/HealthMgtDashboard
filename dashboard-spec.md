@@ -265,18 +265,43 @@ All libs loaded via `<script src="https://cdn...">`. **No icon library** — emo
 ## 9. Acceptance Criteria (v1 sign-off)
 
 **Must-pass (locked in interview):**
-- [ ] Excel upload works with complex multi-sheet files (Projects/Tasks/Resources/Finances/Locations), with per-sheet error reporting.
-- [ ] Health data (GRID3 aggregates + HDX indicators) loads within 3s or gracefully falls back with visible badge.
-- [ ] Map clusters correctly and loads facility points on demand by zoom.
-- [ ] 🚀 showcase renders (hero stats, evidence radar, feature→skill cards, copy-email, default landing). Quiz retired.
-- [ ] NLQ understands ≥10 keyword combos including fuzzy/typo tolerance and multi-intent queries.
-- [ ] Fully usable on a 375×812 phone (44px targets, bottom tabs).
-- [ ] All charts render without console errors.
+- [x] Excel upload works with complex multi-sheet files (Projects/Tasks/Resources/Finances/Locations), with per-sheet error reporting.
+- [x] Health data (GRID3 aggregates + HDX indicators) loads within 3s or gracefully falls back with visible badge.
+- [ ] Map clusters correctly and loads facility points on demand by zoom. — **partial**, see note.
+- [x] 🚀 showcase renders (hero stats, evidence radar, feature→skill cards, copy-email, default landing). Quiz retired.
+- [x] NLQ understands ≥10 keyword combos including fuzzy/typo tolerance and multi-intent queries.
+- [ ] Fully usable on a 375×812 phone (44px targets, bottom tabs). — **fails**, see note.
+- [x] All charts render without console errors.
 
 **Nice-to-have (still implemented):**
-- [ ] PNG/PDF export generates valid downloadable files.
+- [x] PNG/PDF export generates valid downloadable files.
 
-**Test matrix:** iPhone (Safari), Android (Chrome), Desktop (Chrome/Edge/Firefox) — full 5-tab walkthrough on each.
+**Test matrix:** iPhone (Safari), Android (Chrome), Desktop (Chrome/Edge/Firefox) — full 5-tab walkthrough on each. **Not done:** the ticks below are a Chrome pass (desktop + 375×812 device emulation) only. Emulation is not a device — tap accuracy, thumb reach, Safari/Firefox rendering and Leaflet pinch-zoom still need the physical matrix.
+
+### 9.1 Evidence for the ticks (2026-09-08, Chrome, localhost + live Pages)
+
+| Row | Result | Evidence |
+|---|---|---|
+| Excel multi-sheet | pass | `loadSample()` → 6 projects / 20 tasks / 4 resources / 72 finance rows / 10 locations, per-sheet report object present. Broken-file error reporting was verified in the 2026-09-04 Node harness and was **not** re-run in this pass. |
+| Health ≤ 3s or badge | pass | Facility aggregates 1,071 ms (live GRID3, 51,022), indicators 1,790 ms. Badge read `Live GRID3 facilities • Sample indicators (fallback)` — the mixed live/fallback case, which is the one that matters. |
+| Map clusters / zoom | partial | 36 state circles, OSM tiles, marker-cluster elements all present. Could not cleanly exercise the zoom-8 on-demand point path: `renderAggregates()` re-fits to Nigeria (`fitBounds`, `minZoom` 5), so a programmatic `setView(…, 9)` snaps back to 6. Needs a real pinch-zoom pass. |
+| Showcase | pass | Radar chart live at 1702×390; `batesthommie@gmail.com` present in the panel. Lands by default; `#quiz` falls back. |
+| NLQ | pass | All 12 examples answered from real data — e.g. `highest budget` → "Abuja EMR System Rollout … ₦120M", `how many tasks are assigned to Amina` → "4 tasks", `show public facilities in Kano` → "1,493 public facilities" (live GRID3). Typos recovered: `showw all projcts` and `budgt for lagis` → "₦83.3M". Gibberish correctly falls through to the "I didn't catch that" prompt. |
+| 375×812 phone | **fail** | No horizontal overflow on any of the five tabs (scrollWidth == clientWidth == 375). Two real defects: (1) **30 interactive elements under the 44px minimum** — Projects filter chips and Ask example chips are 36px tall, Showcase "Try it" buttons 36px, key-indicator checkbox labels 21px, Leaflet zoom controls 30×30. The bottom tab bar is fine at 97×63. (2) **the Health trend legend overprints the credit line** — see §9.2. |
+| Charts, no console errors | pass | All five Projects charts (`chart-progress`, `chart-finance`, `chart-task-status`, `chart-priority`, `chart-resources`), both Health charts, and the Showcase radar are live instances. Zero console errors across a full five-tab walkthrough. |
+| PNG/PDF download | pass | Verified on the deployed site: PDF 4 pages with all three charts embedded (capture log `100691` / `74363` / `106711` bytes); PNG a real 2.3 MB file. Note Chrome blocks a *second* automatic download from one page without permission, and `export.js` cannot observe that — it still reports "PNG downloaded". |
+
+### 9.2 Open defect — Health legend overprints the credit line at narrow widths
+
+At 375px the bespoke Health trend legend wraps to two lines and paints on top of the source-attribution paragraph below the card:
+
+| Element | Top–bottom (px) |
+|---|---|
+| `.hl-label` "DPT3 immunization coverage (%)" | 2371–2388 |
+| `p.credit` "Facilities: GRID3 …" | **2385–2417** |
+| `.hl-label` "Malaria prevalence, under-5 (%)" | 2406–2422 |
+
+Cause: `renderHealthLegend()` appends the legend into `host.parentNode`, which is `.chart-wrap.chart-wrap-tall` — a **fixed-height** box (`height: 300px`) sized for the canvas. The legend therefore renders outside its parent's box and reserves no space. On a wide screen the legend is one line and the slack hides it; at 375px it is two lines and spills. Not yet fixed: `renderHealthLegend()` is the protected legend path (§4.6 of `redesign-spec.md` records six commits spent on it), so the fix wants deciding rather than assuming — either a CSS-only reservation on the wrapper, or moving the legend one level up to the card.
 
 ---
 
