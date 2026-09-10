@@ -309,6 +309,16 @@ Fixed in CSS only — `renderHealthLegend()` is the protected legend path (§4.6
 
 Known limitation: the band is a fixed 64px, sized for the two-line wrap the two-series legend reaches at 375px (59px measured). A third series would need a taller band.
 
+### 9.3 Open — Health tab shows three source indicators, two of which contradict each other (found 2026-09-10)
+
+On the deployed site the Health tab renders the amber **"Sample data — live source unavailable"** badge while `PMHealthData.currentAggregates().source === 'live'`. Only the HDX indicators fell back; the GRID3 facility aggregates are live. At the same moment the header pill reads **"LIVE DATA"** and the source line correctly reads *"Live GRID3 facilities • Sample indicators (fallback)"*.
+
+So a visitor sees three status indicators for one mixed live/fallback state, and two of them disagree. The source line is the one that is right. The amber badge appears to be driven by "did *anything* fall back?" rather than by the aggregate source it sits next to.
+
+This is the case §9.1 calls "the mixed live/fallback case, which is the one that matters", so getting the badge wrong here costs more than it would in the all-live or all-fallback case.
+
+Owner: `js/health.js` (badge state), with the header pill in `js/app.js`. Not fixed in the README commit — it changes shipped JS and needs its own commit plus a `?v=` bump.
+
 ---
 
 ## 10. Future Phases (explicitly out of v1)
