@@ -33,10 +33,9 @@ exactly what is wrong.
 
 51,022 facilities streamed live from the GRID3 ArcGIS FeatureServer into a Nigeria-framed Leaflet
 map with per-state circles and marker clusters, plus a facilities-by-level doughnut, indicator
-trend lines and a toggleable key-indicator list. When a feed is unavailable the tab falls back to
-seeded sample data and says so on the source line under the KPIs, rather than showing an empty
-state. (The amber badge beside it is currently unreliable when only *one* of the two feeds falls
-back — see [Known limits](#known-limits).)
+trend lines and a toggleable key-indicator list. The two feeds fail independently, so when one is
+unavailable the tab falls back to seeded sample data for that feed only — and says which one, on
+the source line, on the amber badge and in the header chip, rather than showing an empty state.
 
 ### 🚀 This Project — `#showcase`
 
@@ -125,7 +124,7 @@ and no imports; cross-module calls go through those globals, and always defensiv
 `<head>`) → Leaflet → markercluster → `data` → `charts` → `health-data` → `map` → `health` →
 `showcase` → `nlq` → `export` → `pdf` → `app`.
 
-Local `css/` and `js/` references are cache-busted with `?v=N` (currently `?v=14`), because Pages
+Local `css/` and `js/` references are cache-busted with `?v=N` (currently `?v=15`), because Pages
 caches for ~10 minutes and a stale mix of old and new files is the classic "works locally" failure.
 
 ---
@@ -143,8 +142,10 @@ bounding box only once you zoom in.
 
 **Indicators — HDX HAPI (`hapi.humdata.org`), WHO-sourced.** The public endpoint requires an app
 registration, so in practice this call returns 403 and the tab falls back to seeded indicator
-series. That is the mixed case: the header pill reads *live* because the facilities are, while the
-source line correctly reads *Live GRID3 facilities • Sample indicators (fallback)*.
+series. That mixed state is the one you will actually see, and the tab is explicit about it: the
+source line reads *Live GRID3 facilities • Sample indicators (fallback)*, the badge reads *Sample
+indicators — live HDX unavailable*, and the header chip reads *Partly live* rather than claiming
+either extreme.
 
 **Excel.** A five-sheet workbook keyed by `ProjectID`. These are the columns the validator
 requires, verbatim — the `%` on `Completion%` and `Allocation%` is part of the header name
@@ -195,11 +196,10 @@ Written down rather than glossed over. The full acceptance matrix, with evidence
 - **Map zoom-to-points is only partially verified.** Clusters, per-state circles and tiles all
   render, but the zoom-8 on-demand point path could not be cleanly exercised without a real
   pinch-zoom pass, because rendering the aggregates re-fits the map to Nigeria.
-- **The Health "sample data" badge is wrong in the mixed case.** If only one of the two feeds falls
-  back — the usual situation, since HDX 403s — the amber *"Sample data — live source unavailable"*
-  badge shows anyway, while the header pill reads *LIVE DATA*. The badge is driven by "did anything
-  fall back?" rather than by which source did (`js/health.js`). The **source line is the one to
-  trust**; it names each feed separately. Logged as `dashboard-spec.md` §9.3, not yet fixed.
+- **The HDX indicator feed is effectively always in fallback.** Its public endpoint needs an app
+  registration nobody has made, so the indicator charts show seeded series rather than live WHO
+  numbers. The facility data is genuinely live. The tab labels which is which
+  (`dashboard-spec.md` §9.3).
 - **The sample workbook is a small demo set** — 6 projects, 20 tasks, 4 resources, 72 finance rows,
   10 locations. It exercises the features; it is not a load test.
 - **Seven elements at 375px measure under 44px in the DOM.** Five are the indicator checkboxes

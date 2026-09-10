@@ -54,7 +54,10 @@ window.PMHealth = (function () {
         renderTrendChart(ind);
         renderKeyIndicators(ind.keyIndicators);
         if (doneToast) {
-          var src = agg.source === 'live' ? 'Live GRID3 + HDX' : 'Sample data (fallback)';
+          // Same trap as the badge (§9.3): `agg.source` only describes the
+          // facilities, so testing it alone claimed "Live GRID3 + HDX" over
+          // fallback indicators. Report whatever the header chip reports.
+          var src = sourceState(agg.source === 'live', ind.source === 'live').chip;
           window.PMApp && PMApp.toast(doneToast + ' — ' + src);
         }
       })
@@ -64,22 +67,42 @@ window.PMHealth = (function () {
       .finally(function () { loading = false; });
   }
 
+  // The two feeds fail independently, so there are four states, not two —
+  // and the mixed one is the normal case, because HDX 403s without an app
+  // registration (spec §11.2). Every indicator below is derived from the
+  // same `facLive`/`indLive` pair so they cannot disagree.
   function renderSourceState(facSource, indSource) {
     var badge = $('data-badge');
     var line = $('health-source-line');
+    var facLive = facSource === 'live';
+    var indLive = indSource === 'live';
     var parts = [];
-    if (facSource === 'live') parts.push('Live GRID3 facilities');
-    else parts.push('Sample facilities (fallback)');
-    if (indSource === 'live') parts.push('Live HDX indicators');
-    else parts.push('Sample indicators (fallback)');
+    parts.push(facLive ? 'Live GRID3 facilities' : 'Sample facilities (fallback)');
+    parts.push(indLive ? 'Live HDX indicators' : 'Sample indicators (fallback)');
     line.textContent = parts.join(' • ');
-    var anySample = facSource !== 'live' || indSource !== 'live';
-    badge.hidden = !anySample;
+    // The badge names *which* feed fell back. Driving it off "did anything
+    // fall back?" made it announce "Sample data" over live GRID3 facilities
+    // while the header chip simultaneously read "Live data" — spec §9.3.
+    var state = sourceState(facLive, indLive);
+    badge.hidden = !state.badge;
+    if (state.badge) badge.textContent = state.badge;
     // Reflect the same state in the header chip (redesign-spec §4.5).
-    var anyLive = facSource === 'live' || indSource === 'live';
     if (window.PMApp && PMApp.setLiveStatus) {
-      PMApp.setLiveStatus(anyLive, anyLive ? 'Live data' : 'Sample data');
+      PMApp.setLiveStatus(state.anyLive, state.chip);
     }
+  }
+
+  function sourceState(facLive, indLive) {
+    if (facLive && indLive) {
+      return { badge: null, anyLive: true, chip: 'Live data' };
+    }
+    if (!facLive && !indLive) {
+      return { badge: 'Sample data — live sources unavailable', anyLive: false, chip: 'Sample data' };
+    }
+    if (facLive) {
+      return { badge: 'Sample indicators — live HDX unavailable', anyLive: true, chip: 'Partly live' };
+    }
+    return { badge: 'Sample facilities — live GRID3 unavailable', anyLive: true, chip: 'Partly live' };
   }
 
   function fmtNaira(n) {
