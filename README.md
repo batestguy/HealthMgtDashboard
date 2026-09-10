@@ -71,7 +71,7 @@ Every colour and font is a CSS custom property on `:root` / `[data-theme="dark"]
 reads those tokens at draw time, so flipping the theme restyles every chart without any chart code
 knowing about it. The theme is the one thing the app persists (`localStorage`, key `pm-theme`).
 
-<img src="docs/screenshots/dark-mode.webp" width="620" alt="The same Health tab in dark theme: dark green chrome, re-themed KPI cards and indicator panel."> <img src="docs/screenshots/mobile-375.webp" width="220" alt="Health tab at 375x812: indicator trends chart with its bespoke two-line legend band clear of the source-credit line, above the fixed bottom tab bar.">
+<img src="docs/screenshots/dark-mode.webp" width="540" alt="The same Health tab in dark theme: dark green chrome, re-themed KPI cards and indicator panel."> <img src="docs/screenshots/mobile-375.webp" width="190" alt="Health tab at 375x812: indicator trends chart with its bespoke two-line legend band clear of the source-credit line, above the fixed bottom tab bar.">
 
 The layout is mobile-first — single column, max-width 480px, centred, 44px minimum touch targets,
 fixed bottom tab bar.
