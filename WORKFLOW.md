@@ -58,7 +58,7 @@ Read this before starting any work; follow it for every feature, fix, and releas
    # open http://localhost:8000
    ```
 
-   Test at **375×812** (DevTools device mode) plus a desktop width.
+   Test at **375×812** (DevTools device mode) plus a desktop width. If the change touched a chart **wrapper's** layout, also assert `canvas.height === canvasCssHeight * devicePixelRatio` — Chart.js sizes its backing store from the canvas's parent, so a wrapper that grows independently of the canvas renders the chart compressed and drifts pointer hit-testing while looking perfectly fine on screen (redesign-spec §4.6, 2026-09-08).
 5. **Verify** against §9 criteria for that change (see the checklist in §4.3) and confirm **zero console errors**.
 6. **Commit** (conventions in §4.1), then **push** — Pages deploys the new `main` (release procedure §4.2).
 
@@ -106,7 +106,7 @@ Run through the full matrix — **iPhone (Safari), Android (Chrome), Desktop (Ch
 | 3 | Map clusters + on-demand by zoom | Zoom out = aggregate counts; zoom past threshold = clustered points |
 | 4 | Quiz static + dynamic mix; review screen | Start quiz → ≥1 Excel-derived question; finish → results + answer review |
 | 5 | NLQ ≥10 combos, fuzzy, multi-intent | Run the §6 Ask acceptance set; misspell a keyword ("showw", "lagis") |
-| 6 | Usable at 375×812 | All 5 tabs reachable via bottom bar; no horizontal scroll; 44px targets |
+| 6 | Usable at 375×812 | All 5 tabs reachable via bottom bar; no horizontal scroll; 44px targets. **Measure, don't eyeball** — walk every interactive element's `getBoundingClientRect()` at 375×812 and list anything under 44px. Two standing exemptions, not regressions: the 24px indicator checkboxes (covered edge-to-edge by a 44px `.indicator-label` overlay — re-verify with `elementFromPoint` at 0.03/0.5/0.98 of the row width) and the Leaflet/OSM attribution links (43×11, 71×11 — WCAG 2.5.8 inline exception) |
 | 7 | No console errors | Walk all 5 tabs + upload + export; console empty |
 | 8 | PNG/PDF export | PNG downloads + opens; PDF downloads + opens (jsPDF from CDN; button shows "Building PDF report…" then "PDF downloaded — YYYY-MM-DD") |
 

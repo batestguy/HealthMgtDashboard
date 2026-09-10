@@ -111,6 +111,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: 44px;
   text-decoration: none;
   color: inherit;
   min-width: 0;
@@ -177,8 +178,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.08);
@@ -297,7 +298,9 @@ body {
   gap: 8px;
   margin-top: 10px;
 }
-.btn-sm { min-height: 36px; padding: 6px 14px; font-size: 0.82rem; }
+/* "Small" is type scale and padding, not hit area — 44px is the floor for
+   every target (dashboard-spec §5, redesign-spec R-mobile). */
+.btn-sm { min-height: 44px; padding: 8px 14px; font-size: 0.82rem; }
 .btn-sm svg { width: 14px; height: 14px; }
 
 /* ---------- Icon sprite sizing ---------- */
@@ -434,8 +437,8 @@ body {
 /* ---------- Chips + select ---------- */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .chip {
-  min-height: 36px;
-  padding: 6px 14px;
+  min-height: 44px;
+  padding: 8px 16px;
   border-radius: 999px;
   border: 1.5px solid var(--paper-line);
   background: var(--card);
@@ -696,26 +699,45 @@ body {
   color: var(--ink-soft);
 }
 .indicator-list { list-style: none; margin: 10px 0 0; padding: 0; }
+/* The row's own padding used to supply the visual rhythm while the <label>
+   stayed text-height (~21px) — a real but tiny tap target. The padding now
+   lives on the label instead, so the full-width label *is* the 44px target
+   and the row height is unchanged (13+21+13 = 47 -> 44). */
 .indicator-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 13px 0;
   border-bottom: 1px solid var(--hairline);
 }
 .indicator-row:last-child { border-bottom: none; }
 .indicator-row input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   accent-color: var(--green);
   flex: 0 0 auto;
   cursor: pointer;
 }
 .indicator-label {
   flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 0;
   font-size: 0.92rem;
   color: var(--ink);
   line-height: 1.4;
+  cursor: pointer;
+}
+/* The checkbox renders at 24px and cannot be padded up to 44 without drawing
+   a giant box. Instead the label — which already toggles it via `for` —
+   stretches an invisible overlay across the whole row, so the effective
+   target is the full 44px row including the checkbox and the value. Keeps
+   js/health.js untouched; the label click still fires exactly one change. */
+.indicator-label::before {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 .indicator-value {
   font-family: var(--font-mono);
@@ -780,7 +802,13 @@ body {
   color: var(--ink);
   background: var(--bg-raised);
 }
+/* Leaflet ships 30x30 zoom buttons; the 44px floor applies to third-party
+   chrome too, so they are resized here rather than left as the one exception. */
 .health-map .leaflet-control-zoom a {
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 44px !important;
+  font-size: 20px !important;
   background: var(--card) !important;
   color: var(--ink) !important;
   border-color: var(--hairline) !important;
@@ -897,9 +925,41 @@ body {
 }
 /* Health charts inherit atlas chrome from the global chart-wrap; the
    doughnut/trend get the same mono ticks + gold-accent tooltips via
-   PMCharts (redesign-spec §4.6). The 'tall' wrapper is tall enough for
-   two trend lines + legend. */
-#tab-health .chart-wrap-tall { height: 280px; }
+   PMCharts (redesign-spec §4.6).
+
+   The 'tall' wrapper holds two children: the trend canvas and the bespoke
+   HTML legend that renderHealthLegend() appends alongside it. It used to be
+   a flat `height: 280px`, sized for the canvas alone — so the legend painted
+   outside its parent's box and reserved no space. On desktop the legend is
+   one line and the slack hid it; at 375px it wraps to two and overprinted
+   the source-credit paragraph below the card (dashboard-spec §9.2).
+
+   Fixed here rather than in renderHealthLegend(), which is the protected
+   legend path (redesign-spec §4.6 lessons-learned).
+
+   The wrapper reserves a padding band for the legend and the legend is
+   absolutely positioned into it, so the wrapper's *content* box stays
+   exactly 280px. That matters: Chart.js sizes its backing store from the
+   canvas's parent, so anything that lets the parent grow (a column flex
+   with an auto height, say) makes it allocate a 344px surface and squash it
+   into a 280px box — the chart renders ~19% compressed and pointer
+   hit-testing drifts by the same amount. Verified by asserting
+   canvas.height === canvasCssHeight * devicePixelRatio.
+
+   The band fits the two-line wrap the two-series legend reaches at 375px
+   (59px measured). A third series would need a taller band. */
+#tab-health .chart-wrap-tall {
+  --hl-band: 64px;
+  height: calc(280px + var(--hl-band));
+  padding-bottom: var(--hl-band);
+}
+#tab-health .chart-wrap-tall > .hl-legend {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - var(--hl-band));
+  margin-top: 0;
+}
 
 /* ---------- Showcase: hero art moment ---------- */
 .show-hero {
